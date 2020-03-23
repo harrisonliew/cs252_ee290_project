@@ -110,3 +110,6 @@
 [submodule "generators/gemmini"]
 	path = generators/gemmini
 	url = https://github.com/ucb-bar/gemmini
+[submodule "generators/example/software/esp-tests"]
+	path = generators/example/software/esp-tests
+	url = https://github.com/ucb-bar/esp-tests.git
