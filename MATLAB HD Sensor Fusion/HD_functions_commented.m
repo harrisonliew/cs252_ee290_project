@@ -1,5 +1,5 @@
 
-function message = HD_functions
+function message = HD_functions_commented
   assignin('base','genBRandomHV', @genBRandomHV); 
   assignin('base','projBRandomHV', @projBRandomHV); 
   assignin('base','initItemMemories', @initItemMemories);
@@ -378,7 +378,7 @@ function [numPat, AM] = hdctrainproj (labelTrainSet, trainSet, CiM, iM, D, N, pr
     end
 end
 
-function [accExcTrnz, accuracy, predicLabel, actualLabel] = hdcpredictproj (labelTestSet1, testSet1, labelTestSet2, testSet2,labelTestSet3, testSet3,AM, CiM, iM, D, N, precision, classes, channels1, channels2, channels3,projM1, projM2, projM3)
+function [accExcTrnz, accuracy, predicLabel, actualLabel, all_error] = hdcpredictproj (labelTestSet1, testSet1, labelTestSet2, testSet2,labelTestSet3, testSet3,AM, CiM, iM, D, N, precision, classes, channels1, channels2, channels3,projM1, projM2, projM3)
 %
 % DESCRIPTION   : test accuracy based on input testing data
 %
@@ -399,7 +399,7 @@ function [accExcTrnz, accuracy, predicLabel, actualLabel] = hdcpredictproj (labe
 	correct = 0;
     numTests = 0;
 	tranzError = 0;
-	
+	all_error = 0;
    
     for i = 1:1:length(testSet1)-N+1
         
@@ -413,9 +413,9 @@ function [accExcTrnz, accuracy, predicLabel, actualLabel] = hdcpredictproj (labe
         sigHV=mode([sigHV1;sigHV2;sigHV3]);
 
    
-	    predict_hamm = hamming(sigHV, AM, classes);
+	      [predict_hamm, error] = hamming(sigHV, AM, classes);
         predicLabel(i : i+N-1) = predict_hamm;
-        
+        all_error = [all_error, error];
         if predict_hamm == actualLabel(i)
 			correct = correct + 1;
         elseif labelTestSet1 (i) ~= labelTestSet1(i+N-1)
@@ -429,7 +429,7 @@ function [accExcTrnz, accuracy, predicLabel, actualLabel] = hdcpredictproj (labe
   
 end
 
-function [predict_hamm] = hamming (q, aM, classes)
+function [predict_hamm, error] = hamming (q, aM, classes)
 %
 % DESCRIPTION       : computes the Hamming Distance and returns the prediction.
 %
@@ -447,7 +447,7 @@ function [predict_hamm] = hamming (q, aM, classes)
         sims(j) = sum(xor(q,aM(j)));
     end
     
-    [~, indx]=min(sims');
+    [error, indx]=min(sims');
     predict_hamm=indx;
      
 end

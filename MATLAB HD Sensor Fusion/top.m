@@ -23,7 +23,7 @@ features_ECG=features(:,1+32:32+77);
 features_EEG=features(:,1+32+77:32+77+105); 
 
 %=======HDC============
-HD_functions;     % load HD functions
+HD_functions_commented;     % load HD functions
 learningrate=0.25;% percentage of the dataset used to train the algorithm
 acc_ngram_1=[];
 acc_ngram_2=[];
@@ -137,7 +137,7 @@ iMch8(i)=iMch6(i-channels_a-channels_a_ECG);
 end
 
 
-[acc_ex2, acc2, pl2, al2] = hdcpredictproj  (L_TS_COMPLETE_2, TS_COMPLETE_2, L_TS_COMPLETE_4, TS_COMPLETE_4, L_TS_COMPLETE_6, TS_COMPLETE_6,hdc_model_2, chAM8, iMch8, D, N, precision, classes, channels_a,channels_a_ECG,channels_a_EEG,projM2,projM4,projM6);
+[acc_ex2, acc2, pl2, al2, all_error] = hdcpredictproj  (L_TS_COMPLETE_2, TS_COMPLETE_2, L_TS_COMPLETE_4, TS_COMPLETE_4, L_TS_COMPLETE_6, TS_COMPLETE_6,hdc_model_2, chAM8, iMch8, D, N, precision, classes, channels_a,channels_a_ECG,channels_a_EEG,projM2,projM4,projM6);
 accuracy(N,2) = acc2;
 acc2
 
