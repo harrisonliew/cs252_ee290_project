@@ -342,77 +342,70 @@ function [numPat, AM] = hdctrainproj (labelTrainSet1, labelTrainSet2, labelTrain
     trainVecList=zeros (1,D);
     i = 1;
     label = labelTrainSet1 (1);
-    
-    while i < length(labelTrainSet1)-N+1
+    S = zeros (1,D);
+    while i < length(labelTrainSet1)-1
        	if labelTrainSet1(i) == label  
-        %creates ngram for label    
-        %instead want to compute ngram which is fused, keep going if all
-        %of the labels for the modalities are the same. Once one changes,
-        %stop bundling and move onto the next sample for the next label for
-        %all modalities
-        %setup first Ngram
-	    v1 = computeNgramproj (trainSet1 (i : i+N-1,:), CiM, N, precision, iM1, channels1,projM1, 1);
-        v2 = computeNgramproj (trainSet2 (i : i+N-1,:), CiM, N, precision, iM2, channels2,projM2, 1);
-        v3 = computeNgramproj (trainSet3 (i : i+N-1,:), CiM, N, precision, iM3, channels3,projM3, 1);
-        if channels1==1
-            ngram1 = v1;
-        else
-            ngram1 = mode(v1);
-        end
-        if channels2==1
-            ngram2 = v2;
-        else
-            ngram2 = mode(v2);
-        end
-        if channels3==1
-            ngram3 = v3;
-        else
-            ngram3 = mode(v3);
-        end
-        ngram=mode([ngram1;ngram2;ngram3]);
-        for sample_index = 2:1:N
-            v1 = computeNgramproj (trainSet1 (i : i+N-1,:), CiM, N, precision, iM1, channels1,projM1, sample_index);
+            %creates ngram for label    
+            %instead want to compute ngram which is fused, keep going if all
+            %of the labels for the modalities are the same. Once one changes,
+            %stop bundling and move onto the next sample for the next label for
+            %all modalities
+            %setup first Ngram
+            v1 = computeNgramproj (trainSet1 (i : i+N-1,:), CiM, N, precision, iM1, channels1,projM1, 1);
+            v2 = computeNgramproj (trainSet2 (i : i+N-1,:), CiM, N, precision, iM2, channels2,projM2, 1);
+            v3 = computeNgramproj (trainSet3 (i : i+N-1,:), CiM, N, precision, iM3, channels3,projM3, 1);
             if channels1==1
-                record1 = v1;          
+                ngram1 = v1;
             else
-                record1 = mode(v1); 
+                ngram1 = mode(v1);
             end
-            v2 = computeNgramproj (trainSet2 (i : i+N-1,:), CiM, N, precision, iM2, channels2,projM2, sample_index);
             if channels2==1
-                record2 = v2;          
+                ngram2 = v2;
             else
-                record2 = mode(v2); 
+                ngram2 = mode(v2);
             end
-            v3 = computeNgramproj (trainSet3 (i : i+N-1,:), CiM, N, precision, iM3, channels3,projM3, sample_index);
             if channels3==1
-                record3 = v3;          
+                ngram3 = v3;
             else
-                record3 = mode(v3); 
+                ngram3 = mode(v3);
             end
-            record = mode([record1;record2;record3]);
-            ngram = xor(circshift (ngram, [1,1]) , record);
-        end
-            trainVecList = [trainVecList ; ngram];
-	        numPat (labelTrainSet1 (i+N-1)) = numPat (labelTrainSet1 (i+N-1)) + 1;
-            
+            record1=mode([ngram1;ngram2;ngram3]);
+            v1 = computeNgramproj (trainSet1 (i : i+N-1,:), CiM, N, precision, iM1, channels1,projM1, 2);
+            v2 = computeNgramproj (trainSet2 (i : i+N-1,:), CiM, N, precision, iM2, channels2,projM2, 2);
+            v3 = computeNgramproj (trainSet3 (i : i+N-1,:), CiM, N, precision, iM3, channels3,projM3, 2);
+            if channels1==1
+                ngram1 = v1;
+            else
+                ngram1 = mode(v1);
+            end
+            if channels2==1
+                ngram2 = v2;
+            else
+                ngram2 = mode(v2);
+            end
+            if channels3==1
+                ngram3 = v3;
+            else
+                ngram3 = mode(v3);
+            end
+            record2=mode([ngram1;ngram2;ngram3]);
+            S = mode([circshift(record1, [1,1]); circshift(record2, [1,2]); S]);            
             i = i + 1;
         else
             %once you reach the end of that label, do majority count and
             %set AM vector to be the bundled version of all the ngrams for
             %that label, then move onto next label
-            trainVecList(1 , :) = 3;
-            AM (label) = mode (trainVecList);
+            AM (label) = S;
             label = labelTrainSet1(i);
-            numPat (label) = 0;
-            trainVecList=zeros (1,D);
+            S = zeros (1,D);
         end
     end
-    l=floor(i+(N/2));
+    l=floor(i+(1/2));
     if l > length(labelTrainSet1)
-       l= length(labelTrainSet1);
+       l=length(labelTrainSet1);
     end    
     %wrap up the last training class
-    AM (labelTrainSet1 (l)) = mode (trainVecList);   
+    AM (labelTrainSet1 (l)) = S;   
     for label = 1:1:max(labelTrainSet1)
 		fprintf ('Class = %d \t sum = %.0f \t created \n', label, sum(AM(label)));
     end

@@ -77,6 +77,20 @@ LABEL_1_a=f_label_a_binary;
 [TS_COMPLETE_5, L_TS_COMPLETE_5] = downSampling (COMPLETE_1_v_EEG, LABEL_1_v, downSampRate);
 [TS_COMPLETE_6, L_TS_COMPLETE_6] = downSampling (COMPLETE_1_a_EEG, LABEL_1_a, downSampRate);
 
+%Valence
+valence_count_class_change = 0;
+for i = 1:1:length(L_TS_COMPLETE_1)-1
+    if L_TS_COMPLETE_1(i) ~= L_TS_COMPLETE_1(i+1)
+        valence_count_class_change = valence_count_class_change+1;
+    end
+end
+%arousal
+arousal_count_class_change = 0;
+for i = 1:1:length(L_TS_COMPLETE_2)-1
+    if L_TS_COMPLETE_2(i) ~= L_TS_COMPLETE_2(i+1)
+        arousal_count_class_change = arousal_count_class_change+1;
+    end
+end
 %generate the training matrices using the learning rate contined in the
 %variable "learningFrac"
 % 1 = v + GSR
