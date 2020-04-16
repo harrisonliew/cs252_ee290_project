@@ -378,7 +378,7 @@ function [numPat, AM] = hdctrainproj (labelTrainSet, trainSet, CiM, iM, D, N, pr
     end
 end
 
-function [accExcTrnz, accuracy, predicLabel, actualLabel, all_error] = hdcpredictproj (labelTestSet1, testSet1, labelTestSet2, testSet2,labelTestSet3, testSet3,AM, CiM, iM, D, N, precision, classes, channels1, channels2, channels3,projM1, projM2, projM3)
+function [accExcTrnz, accuracy, predicLabel, actualLabel, all_error] = hdcpredictproj (labelTestSet1, testSet1, labelTestSet2, testSet2,labelTestSet3, testSet3,AM, CiM, iM1, iM2, iM3, D, N, precision, classes, channels1, channels2, channels3,projM1, projM2, projM3)
 %
 % DESCRIPTION   : test accuracy based on input testing data
 %
@@ -400,22 +400,24 @@ function [accExcTrnz, accuracy, predicLabel, actualLabel, all_error] = hdcpredic
     numTests = 0;
 	tranzError = 0;
 	all_error = 0;
+    second_all_error = 0;
    
     for i = 1:1:length(testSet1)-N+1
         
 		numTests = numTests + 1;
 		actualLabel(i : i+N-1,:) = mode(labelTestSet1 (i : i+N-1));
         %need to adjust hdcpredictproj here 
-        sigHV1 = computeNgramproj (testSet1 (i : i+N-1,:), CiM, N, precision, iM, channels1,projM1);
-        sigHV2 = computeNgramproj (testSet2 (i : i+N-1,:), CiM, N, precision, iM, channels2,projM2);
-   	    sigHV3 = computeNgramproj (testSet3 (i : i+N-1,:), CiM, N, precision, iM, channels3,projM3);
+        sigHV1 = computeNgramproj (testSet1 (i : i+N-1,:), CiM, N, precision, iM1, channels1,projM1);
+        sigHV2 = computeNgramproj (testSet2 (i : i+N-1,:), CiM, N, precision, iM2, channels2,projM2);
+   	    sigHV3 = computeNgramproj (testSet3 (i : i+N-1,:), CiM, N, precision, iM3, channels3,projM3);
         
         sigHV=mode([sigHV1;sigHV2;sigHV3]);
 
    
-	      [predict_hamm, error] = hamming(sigHV, AM, classes);
+	    [predict_hamm, error, second_error] = hamming(sigHV, AM, classes);
         predicLabel(i : i+N-1) = predict_hamm;
         all_error = [all_error, error];
+        second_all_error = [second_all_error second_error];
         if predict_hamm == actualLabel(i)
 			correct = correct + 1;
         elseif labelTestSet1 (i) ~= labelTestSet1(i+N-1)
@@ -429,7 +431,7 @@ function [accExcTrnz, accuracy, predicLabel, actualLabel, all_error] = hdcpredic
   
 end
 
-function [predict_hamm, error] = hamming (q, aM, classes)
+function [predict_hamm, error, second_error] = hamming (q, aM, classes)
 %
 % DESCRIPTION       : computes the Hamming Distance and returns the prediction.
 %
@@ -448,6 +450,8 @@ function [predict_hamm, error] = hamming (q, aM, classes)
     end
     
     [error, indx]=min(sims');
+    M=sort(sims);
+    second_error=M(2);
     predict_hamm=indx;
      
 end
