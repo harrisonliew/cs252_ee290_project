@@ -1,5 +1,5 @@
 
-function message = HD_functions_modified
+function message = HD_functions_commented
   assignin('base','genBRandomHV', @genBRandomHV); 
   assignin('base','projBRandomHV', @projBRandomHV); 
   assignin('base','initItemMemories', @initItemMemories);
@@ -217,7 +217,7 @@ function proj_m = projBRandomHV( D, F ,q)
  
 end
 
-function randomHV = projItemMemeory (projM_pos, projM_neg, voffeature,ioffeature,D)
+function randomHV = projItemMemeory (projM_pos, projM_neg, voffeature,ioffeature, D)
 %
 % INPUTS:
 %   projM	: random vector with {-1,0,+1}
@@ -233,20 +233,20 @@ function randomHV = projItemMemeory (projM_pos, projM_neg, voffeature,ioffeature
         else
             randomHV = zeros(1,D);
         end
-        %projV=projM(ioffeature,:);
-        %h= voffeature.*projV;
-
-    %for i=1:length(h)
-      %if h(i)>0
-        %randomHV(i)=1;
-        %else
-        %randomHV(i)=0;
-       %end
-    %end
+%         projV=projM(ioffeature,:);
+%         h= voffeature.*projV;
+% 
+%     for i=1:length(h)
+%       if h(i)>0
+%         randomHV(i)=1;
+%         else
+%         randomHV(i)=0;
+%        end
+%     end
 
 end
 
-function v = computeNgramproj (buffer, CiM, N, precision, iM, channels,projM_pos, projM_neg, sample_index,D)
+function Ngram = computeNgramproj (buffer, CiM, N, precision, iM, channels,projM_pos, projM_neg,D)
 % 	DESCRIPTION: computes the N-gram
 % 	INPUTS:
 % 	buffer   :  data input
@@ -258,13 +258,13 @@ function v = computeNgramproj (buffer, CiM, N, precision, iM, channels,projM_pos
 % 	OUTPUTS:
 % 	Ngram    :  query hypervector
     
-    %setup for first sample duplicate for all modalities
-    chHV = projItemMemeory (projM_pos, projM_neg, buffer(sample_index, 1),1,D);
+    %setup for first sample
+    chHV = projItemMemeory (projM_pos, projM_neg, buffer(1, 1),1,D);
     chHV = xor(chHV , iM(1));
     v = chHV;
     if channels>1    
     for i = 2 : channels
-        chHV = projItemMemeory (projM_pos, projM_neg, buffer(sample_index, i), i,D);
+        chHV = projItemMemeory (projM_pos, projM_neg, buffer(1, i), i,D);
         chHV = xor(chHV , iM(i));
         if i == 2
             ch2HV=chHV; 
@@ -278,49 +278,49 @@ function v = computeNgramproj (buffer, CiM, N, precision, iM, channels,projM_pos
     v = [v; chHV]; 
     end
     
-%     %Add the other modalities
-%     if channels==1
-%     Ngram = v;
-%     else
-%     Ngram = mode(v);
-%     end
-%     
-%     %Add later samples
-%     for sample_index = 2:1:N
-%         %replicate for other modalities
-%         chHV = projItemMemeory (projM, buffer(sample_index, 1), 1);
-%         chHV = xor(chHV , iM(1));
-%         ch1HV = chHV;
-%         %combine the other modalities
-%         v = chHV;
-%       if channels>1  
-%         %replicate for other modalities
-%         for j = 2 : channels
-%             chHV = projItemMemeory (projM, buffer(sample_index, j), j);
-%             chHV = xor(chHV , iM(j));
-%             if j == 2
-%                 ch2HV=chHV; 
-%             end
-%             %combine the other modalities
-%             v = [v; chHV];
-%         end  
-%         %combine other modalities for whatever this weird thing is
-%         chHV = xor(chHV , ch2HV);
-%         v = [v; chHV]; 
-%       end
-%       
-%       if channels==1
-%         record = v;          
-%       else
-%         record = mode(v); 
-%       end
-% 		Ngram = xor(circshift (Ngram, [1,1]) , record);
-%            
-%     end	 
-%  
+    %Add the other modalities
+    if channels==1
+    Ngram = v;
+    else
+    Ngram = mode(v);
+    end
+    
+    %Add later samples
+    for i = 2:1:N
+        %replicate for other modalities
+        chHV = projItemMemeory (projM_pos, projM_neg, buffer(i, 1), 1,D);
+        chHV = xor(chHV , iM(1));
+        ch1HV = chHV;
+        %combine the other modalities
+        v = chHV;
+      if channels>1  
+        %replicate for other modalities
+        for j = 2 : channels
+            chHV = projItemMemeory (projM_pos, projM_neg, buffer(i, j), j,D);
+            chHV = xor(chHV , iM(j));
+            if j == 2
+                ch2HV=chHV; 
+            end
+            %combine the other modalities
+            v = [v; chHV];
+        end  
+        %combine other modalities for whatever this weird thing is
+        chHV = xor(chHV , ch2HV);
+        v = [v; chHV]; 
+      end
+      
+      if channels==1
+        record = v;          
+      else
+        record = mode(v); 
+      end
+		Ngram = xor(circshift (Ngram, [1,1]) , record);
+           
+    end	 
+ 
 end
   
-function [numPat, AM] = hdctrainproj (labelTrainSet1, labelTrainSet2, labelTrainSet3, trainSet1, trainSet2, trainSet3, CiM, iM1, iM2, iM3, D, N, precision, channels1, channels2, channels3,projM1_pos, projM1_neg, projM2_pos, projM2_neg, projM3_pos, projM3_neg ) 
+function [numPat, AM] = hdctrainproj (labelTrainSet, trainSet, CiM, iM, D, N, precision, channels,projM_pos, projM_neg) 
 %
 % DESCRIPTION   : train an associative memory based on input training data
 %
@@ -341,66 +341,25 @@ function [numPat, AM] = hdctrainproj (labelTrainSet1, labelTrainSet2, labelTrain
 	AM = containers.Map ('KeyType','double','ValueType','any');
 
 	
-    for label = 1:1:max(labelTrainSet1)
+    for label = 1:1:max(labelTrainSet)
     	AM (label) = zeros (1,D);
 	    numPat (label) = 0;
     end
     trainVecList=zeros (1,D);
     i = 1;
-    label = labelTrainSet1 (1);
+    label = labelTrainSet (1);
     
-    while i < length(labelTrainSet1)-N+1
-       	if labelTrainSet1(i) == label  
+    while i < length(labelTrainSet)-N+1
+       	if labelTrainSet(i) == label  
         %creates ngram for label    
         %instead want to compute ngram which is fused, keep going if all
         %of the labels for the modalities are the same. Once one changes,
         %stop bundling and move onto the next sample for the next label for
         %all modalities
-        %setup first Ngram
-	    v1 = computeNgramproj (trainSet1 (i : i+N-1,:), CiM, N, precision, iM1, channels1,projM1_pos, projM1_neg, 1,D);
-        v2 = computeNgramproj (trainSet2 (i : i+N-1,:), CiM, N, precision, iM2, channels2,projM2_pos, projM2_neg, 1,D);
-        v3 = computeNgramproj (trainSet3 (i : i+N-1,:), CiM, N, precision, iM3, channels3,projM3_pos, projM3_neg, 1,D);
-        if channels1==1
-            ngram1 = v1;
-        else
-            ngram1 = mode(v1);
-        end
-        if channels2==1
-            ngram2 = v2;
-        else
-            ngram2 = mode(v2);
-        end
-        if channels3==1
-            ngram3 = v3;
-        else
-            ngram3 = mode(v3);
-        end
-        ngram=mode([ngram1;ngram2;ngram3]);
-        for sample_index = 2:1:N
-            v1 = computeNgramproj (trainSet1 (i : i+N-1,:), CiM, N, precision, iM1, channels1,projM1_pos, projM1_neg, sample_index,D);
-            if channels1==1
-                record1 = v1;          
-            else
-                record1 = mode(v1); 
-            end
-            v2 = computeNgramproj (trainSet2 (i : i+N-1,:), CiM, N, precision, iM2, channels2,projM2_pos, projM2_neg, sample_index,D);
-            if channels2==1
-                record2 = v2;          
-            else
-                record2 = mode(v2); 
-            end
-            v3 = computeNgramproj (trainSet3 (i : i+N-1,:), CiM, N, precision, iM3, channels3,projM3_pos, projM3_neg, sample_index,D);
-            if channels3==1
-                record3 = v3;          
-            else
-                record3 = mode(v3); 
-            end
-            record = mode([record1;record2;record3]);
-            ngram = xor(circshift (ngram, [1,1]) , record);
-        end
+	    ngram = computeNgramproj (trainSet (i : i+N-1,:), CiM, N, precision, iM, channels,projM_pos, projM_neg,D);
             trainVecList = [trainVecList ; ngram];
-	        numPat (labelTrainSet1 (i+N-1)) = numPat (labelTrainSet1 (i+N-1)) + 1;
-            
+	        numPat (labelTrainSet (i+N-1)) = numPat (labelTrainSet (i+N-1)) + 1;
+
             i = i + 1;
         else
             %once you reach the end of that label, do majority count and
@@ -408,18 +367,19 @@ function [numPat, AM] = hdctrainproj (labelTrainSet1, labelTrainSet2, labelTrain
             %that label, then move onto next label
             trainVecList(1 , :) = 3;
             AM (label) = mode (trainVecList);
-            label = labelTrainSet1(i);
+            label = labelTrainSet(i);
             numPat (label) = 0;
             trainVecList=zeros (1,D);
+    
         end
     end
     l=floor(i+(N/2));
-    if l > length(labelTrainSet1)
-       l= length(labelTrainSet1);
+    if l > length(labelTrainSet)
+       l= length(labelTrainSet);
     end    
     %wrap up the last training class
-    AM (labelTrainSet1 (l)) = mode (trainVecList);   
-    for label = 1:1:max(labelTrainSet1)
+    AM (labelTrainSet (l)) = mode (trainVecList);   
+    for label = 1:1:max(labelTrainSet)
 		fprintf ('Class = %d \t sum = %.0f \t created \n', label, sum(AM(label)));
     end
 end
@@ -446,62 +406,24 @@ function [accExcTrnz, accuracy, predicLabel, actualLabel, all_error] = hdcpredic
     numTests = 0;
 	tranzError = 0;
 	all_error = 0;
-    second_error_all=0;
+    second_all_error = 0;
    
-    for i = 1:1:length(testSet1)-N+1        
+    for i = 1:1:length(testSet1)-N+1
+        
 		numTests = numTests + 1;
 		actualLabel(i : i+N-1,:) = mode(labelTestSet1 (i : i+N-1));
-        %% setup first Ngram for all modalities
-        v1 = computeNgramproj (testSet1 (i : i+N-1,:), CiM, N, precision, iM1, channels1,projM1_pos, projM1_neg,1,D);
-        v2 = computeNgramproj (testSet2 (i : i+N-1,:), CiM, N, precision, iM2, channels2,projM2_pos, projM2_neg,1,D);
-        v3 = computeNgramproj (testSet3 (i : i+N-1,:), CiM, N, precision, iM3, channels3,projM3_pos, projM3_neg,1,D);
-        if channels1==1
-            sigHV1 = v1;
-        else
-            sigHV1 = mode(v1);
-        end
-        if channels2==1
-            sigHV2 = v2;
-        else
-            sigHV2 = mode(v2);
-        end
-        if channels3==1
-            sigHV3 = v3;
-        else
-            sigHV3 = mode(v3);
-        end
-        % combine modalities
+        %need to adjust hdcpredictproj here 
+        sigHV1 = computeNgramproj (testSet1 (i : i+N-1,:), CiM, N, precision, iM1, channels1,projM1_pos, projM1_neg,D);
+        sigHV2 = computeNgramproj (testSet2 (i : i+N-1,:), CiM, N, precision, iM2, channels2,projM2_pos, projM2_neg,D);
+   	    sigHV3 = computeNgramproj (testSet3 (i : i+N-1,:), CiM, N, precision, iM3, channels3,projM3_pos, projM3_neg,D);
+        
         sigHV=mode([sigHV1;sigHV2;sigHV3]);
-        %% setup spatial encoder outputs for all channels for all modalities N-1 samples
-        for sample_index = 2:1:N
-            v1 = computeNgramproj (testSet1 (i : i+N-1,:), CiM, N, precision, iM1, channels1,projM1_pos, projM1_neg, sample_index,D);
-            if channels1==1
-                record1 = v1;          
-            else
-                record1 = mode(v1); 
-            end
-            v2 = computeNgramproj (testSet2 (i : i+N-1,:), CiM, N, precision, iM2, channels2,projM2_pos, projM2_neg, sample_index,D);
-            if channels2==1
-                record2 = v2;          
-            else
-                record2 = mode(v2); 
-            end
-            v3 = computeNgramproj (testSet3 (i : i+N-1,:), CiM, N, precision, iM3, channels3,projM3_pos, projM3_neg, sample_index,D);
-            if channels3==1
-                record3 = v3;          
-            else
-                record3 = mode(v3); 
-            end
-            % combine modalities
-            record = mode([record1;record2;record3]);
-            % bundle
-            sigHV = xor(circshift (sigHV, [1,1]) , record);
-        end
+
    
 	    [predict_hamm, error, second_error] = hamming(sigHV, AM, classes);
         predicLabel(i : i+N-1) = predict_hamm;
-        all_error = [all_error error]; %#ok<AGROW>
-        second_error_all = [second_error_all second_error]; %#ok<AGROW>
+        all_error = [all_error, error];
+        second_all_error = [second_all_error second_error];
         if predict_hamm == actualLabel(i)
 			correct = correct + 1;
         elseif labelTestSet1 (i) ~= labelTestSet1(i+N-1)

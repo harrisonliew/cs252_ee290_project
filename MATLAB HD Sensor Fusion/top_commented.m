@@ -5,7 +5,8 @@ load('input_data.mat')
 features=data_all;
 f_label_a_binary=data_all(:,215);
 f_label_v_binary=data_all(:,216);
-
+met_A_accuracy = zeros(1,8);
+met_V_accuracy = zeros(1,8);
 for k=1:214
 features(:,k)=features(:,k)-min(features(:,k));
 end
@@ -27,8 +28,8 @@ features_EEG=features(:,1+32+77:32+77+105);
 % HD_functions_modified: early fusion w/bug fix
 % HD_functions_commented: late fusion w/comments and w/bug fix 
 % HD_functions_parameter_less_tempenc: HD early fusion w/parameter-less temporal encoder
-HD_functions_modified;     % load HD functions
-learningrate=0.25;% percentage of the dataset used to train the algorithm
+HD_functions_multiplex;     % load HD functions
+learningrate=0.25; % percentage of the dataset used to train the algorithm
 acc_ngram_1=[];
 acc_ngram_2=[];
 
@@ -48,10 +49,12 @@ COMPLETE_1_a_ECG=features_ECG;
 COMPLETE_1_v_EEG=features_EEG;
 COMPLETE_1_a_EEG=features_EEG;
 
-for j=1:length(learningrate)
-learningFrac = learningrate(j); 
-learningFrac
-D = 10000; %dimension of the hypervectors
+D_full = [10000]; %dimension of the hypervectors
+for j=1:length(D_full)
+learningFrac = learningrate(1); 
+learningFrac;
+D=D_full(j);
+D
 classes = 2; % level of classes
 precision = 20; %no use
 ngram = 10; % for temporal encode
@@ -127,26 +130,55 @@ projM3=projBRandomHV(D,channels_v_ECG,q);
 projM4=projBRandomHV(D,channels_a_ECG,q);
 projM5=projBRandomHV(D,channels_v_EEG,q);
 projM6=projBRandomHV(D,channels_a_EEG,q);
-
+projM1_neg = projM1;
+projM1_pos = projM1;
+projM1_neg(projM1_neg==-1) = 0;
+projM1_pos(projM1_pos==1) = 0;
+projM1_pos(projM1==-1) = 1;
+projM2_neg = projM2;
+projM2_pos = projM2;
+projM2_neg(projM2==-1) = 0;
+projM2_pos(projM2==1) = 0;
+projM2_pos(projM2==-1) = 1;
+projM3_neg = projM3;
+projM3_pos = projM3;
+projM3_neg(projM3==-1) = 0;
+projM3_pos(projM3==1) = 0;
+projM3_pos(projM3==-1) = 1;
+projM4_neg = projM4;
+projM4_pos = projM4;
+projM4_neg(projM4==-1) = 0;
+projM4_pos(projM4==1) = 0;
+projM4_pos(projM4==-1) = 1;
+projM5_neg = projM5;
+projM5_pos = projM5;
+projM5_neg(projM5==-1) = 0;
+projM5_pos(projM5==1) = 0;
+projM5_pos(projM5==-1) = 1;
+projM6_neg = projM6;
+projM6_pos = projM6;
+projM6_neg(projM6==-1) = 0;
+projM6_pos(projM6==1) = 0;
+projM6_pos(projM6==-1) = 1;
 
 for N = 1:ngram
 % creates ngram for data, rotates through and 
 N
 
-%% Arousal
+% Arousal
 %generate ngram bundles for each data stream
 fprintf ('HDC for A\n');
-%[numpat_2, hdc_model_2] = hdctrainproj (L_SAMPL_DATA_2, SAMPL_DATA_2, chAM8, iMch2, D, N, precision, channels_a,projM2); 
-%[numpat_4, hdc_model_4] = hdctrainproj (L_SAMPL_DATA_4, SAMPL_DATA_4, chAM8, iMch4, D, N, precision, channels_a_ECG,projM4); 
-%[numpat_6, hdc_model_6] = hdctrainproj (L_SAMPL_DATA_6, SAMPL_DATA_6, chAM8, iMch6, D, N, precision, channels_a_EEG,projM6); 
-[numpat, hdc_model] = hdctrainproj (L_SAMPL_DATA_2, L_SAMPL_DATA_4, L_SAMPL_DATA_6,SAMPL_DATA_2, SAMPL_DATA_4, SAMPL_DATA_6, chAM8, iMch2, iMch4, iMch6, D, N, precision, channels_a, channels_a_ECG, channels_a_EEG,projM2, projM4, projM6); 
+[numpat_2, hdc_model_2] = hdctrainproj (L_SAMPL_DATA_2, SAMPL_DATA_2, chAM8, iMch2, D, N, precision, channels_a,projM2_pos,projM2_neg); 
+[numpat_4, hdc_model_4] = hdctrainproj (L_SAMPL_DATA_4, SAMPL_DATA_4, chAM8, iMch4, D, N, precision, channels_a_ECG,projM4_pos,projM4_neg); 
+[numpat_6, hdc_model_6] = hdctrainproj (L_SAMPL_DATA_6, SAMPL_DATA_6, chAM8, iMch6, D, N, precision, channels_a_EEG,projM6_pos,projM6_neg); 
+%[numpat, hdc_model] = hdctrainproj (L_SAMPL_DATA_2, L_SAMPL_DATA_4, L_SAMPL_DATA_6,SAMPL_DATA_2, SAMPL_DATA_4, SAMPL_DATA_6, chAM8, iMch2, iMch4, iMch6, D, N, precision, channels_a, channels_a_ECG, channels_a_EEG,projM2_pos, projM2_neg, projM4_pos, projM4_neg, projM6_pos, projM6_neg); 
 
 %uncomment following for late fusion
 %bundle all the sensors (this is the fusion point)
 % %class 1
-%hdc_model_2(1)=mode([hdc_model_2(1); hdc_model_4(1); hdc_model_6(1)]);
+hdc_model_2(1)=mode([hdc_model_2(1); hdc_model_4(1); hdc_model_6(1)]);
 % %class 2
-%hdc_model_2(2)=mode([hdc_model_2(2); hdc_model_4(2); hdc_model_6(2)]);
+hdc_model_2(2)=mode([hdc_model_2(2); hdc_model_4(2); hdc_model_6(2)]);
 
 for i=1:channels_a
 iMch8(i)=iMch2(i);
@@ -159,50 +191,60 @@ iMch8(i)=iMch6(i-channels_a-channels_a_ECG);
 end
 
 %hdc_model_2 -> hdc_model for early fusion
-[acc_ex2, acc2, pl2, al2, all_error] = hdcpredictproj  (L_TS_COMPLETE_2, TS_COMPLETE_2, L_TS_COMPLETE_4, TS_COMPLETE_4, L_TS_COMPLETE_6, TS_COMPLETE_6,hdc_model, chAM8, iMch2, iMch4, iMch6, D, N, precision, classes, channels_a,channels_a_ECG,channels_a_EEG,projM2,projM4,projM6);
+[acc_ex2, acc2, pl2, al2, all_error] = hdcpredictproj  (L_TS_COMPLETE_2, TS_COMPLETE_2, L_TS_COMPLETE_4, TS_COMPLETE_4, L_TS_COMPLETE_6, TS_COMPLETE_6,hdc_model_2, chAM8, iMch2, iMch4, iMch6, D, N, precision, classes, channels_a,channels_a_ECG,channels_a_EEG, projM2_pos, projM2_neg, projM4_pos, projM4_neg, projM6_pos, projM6_neg);
 
 accuracy(N,2) = acc2;
 acc2
  
 %acc_ngram_1(N,j)=acc1;
-acc_ngram_2(N,j)=acc2;
+acc_ngram_A(N,j)=acc2;
 
-%% Valence
+% Valence
 
-% fprintf ('HDC for V\n');
-%  %[numpat_1, hdc_model_1] = hdctrainproj (L_SAMPL_DATA_1, SAMPL_DATA_1, chAM8, iMch1, D, N, precision, channels_v,projM1); 
-%  %[numpat_3, hdc_model_3] = hdctrainproj (L_SAMPL_DATA_3, SAMPL_DATA_3, chAM8, iMch3, D, N, precision, channels_v_ECG,projM3); 
-%  %[numpat_5, hdc_model_5] = hdctrainproj (L_SAMPL_DATA_5, SAMPL_DATA_5, chAM8, iMch5, D, N, precision, channels_v_EEG,projM5); 
-% [numpat, hdc_model] = hdctrainproj (L_SAMPL_DATA_1, L_SAMPL_DATA_3, L_SAMPL_DATA_5,SAMPL_DATA_1, SAMPL_DATA_3, SAMPL_DATA_5, chAM8, iMch1, iMch3, iMch5, D, N, precision, channels_v, channels_v_ECG, channels_v_EEG,projM1, projM3, projM5); 
-% 
-% 
-% %class 1
-% %hdc_model_1(1)=mode([hdc_model_1(1); hdc_model_3(1); hdc_model_5(1)]);
-% %class 2
-% %hdc_model_1(2)=mode([hdc_model_1(2); hdc_model_3(2); hdc_model_5(2)]);
-% 
-% for i=1:channels_v
-% iMch8(i)=iMch1(i);
-% end
-% for i=channels_v+1:channels_v+channels_v_ECG
-% iMch8(i)=iMch3(i-channels_v);
-% end
-% for i=channels_v+channels_v_ECG+1:channels_v+channels_v_ECG+channels_v_EEG
-% iMch8(i)=iMch5(i-channels_v-channels_v_ECG);
-% end
-% 
-% %hdc_model_1 -> hdc_model for early fusion
-% [acc_ex1, acc1, pl1, al1, all_error] = hdcpredictproj  (L_TS_COMPLETE_1, TS_COMPLETE_1, L_TS_COMPLETE_3, TS_COMPLETE_3, L_TS_COMPLETE_5, TS_COMPLETE_5,hdc_model, chAM8, iMch1, iMch3, iMch5, D, N, precision, classes, channels_v,channels_v_ECG,channels_v_EEG,projM1,projM3,projM5);
-% %for verification
-% %[acc_ex1, acc1, pl1, al1, all_error] = hdcpredictproj  (L_SAMPL_DATA_1, SAMPL_DATA_1, L_SAMPL_DATA_3, SAMPL_DATA_3, L_SAMPL_DATA_5, SAMPL_DATA_5,hdc_model, chAM8, iMch1, iMch3, iMch5, D, N, precision, classes, channels_v,channels_v_ECG,channels_v_EEG,projM1,projM3,projM5);
-% 
-% accuracy(N,2) = acc1;
-% acc1
-% 
-% %acc_ngram_1(N,j)=acc1;
-% acc_ngram_1(N,j)=acc1;
+fprintf ('HDC for V\n');
+ [numpat_1, hdc_model_1] = hdctrainproj (L_SAMPL_DATA_1, SAMPL_DATA_1, chAM8, iMch1, D, N, precision, channels_v,projM1_pos,projM1_neg); 
+ [numpat_3, hdc_model_3] = hdctrainproj (L_SAMPL_DATA_3, SAMPL_DATA_3, chAM8, iMch3, D, N, precision, channels_v_ECG,projM3_pos,projM3_neg); 
+ [numpat_5, hdc_model_5] = hdctrainproj (L_SAMPL_DATA_5, SAMPL_DATA_5, chAM8, iMch5, D, N, precision, channels_v_EEG,projM5_pos,projM5_neg); 
+ %[numpat, hdc_model] = hdctrainproj (L_SAMPL_DATA_1, L_SAMPL_DATA_3, L_SAMPL_DATA_5,SAMPL_DATA_1, SAMPL_DATA_3, SAMPL_DATA_5, chAM8, iMch1, iMch3, iMch5, D, N, precision, channels_v, channels_v_ECG, channels_v_EEG,projM1_pos,projM1_neg, projM3_pos,projM3_neg, projM5_pos,projM5_neg); 
+
+
+%class 1
+hdc_model_1(1)=mode([hdc_model_1(1); hdc_model_3(1); hdc_model_5(1)]);
+%class 2
+hdc_model_1(2)=mode([hdc_model_1(2); hdc_model_3(2); hdc_model_5(2)]);
+
+for i=1:channels_v
+iMch8(i)=iMch1(i);
+end
+for i=channels_v+1:channels_v+channels_v_ECG
+iMch8(i)=iMch3(i-channels_v);
+end
+for i=channels_v+channels_v_ECG+1:channels_v+channels_v_ECG+channels_v_EEG
+iMch8(i)=iMch5(i-channels_v-channels_v_ECG);
 end
 
+%hdc_model_1 -> hdc_model for early fusion
+[acc_ex1, acc1, pl1, al1, all_error] = hdcpredictproj  (L_TS_COMPLETE_1, TS_COMPLETE_1, L_TS_COMPLETE_3, TS_COMPLETE_3, L_TS_COMPLETE_5, TS_COMPLETE_5,hdc_model_1, chAM8, iMch1, iMch3, iMch5, D, N, precision, classes, channels_v,channels_v_ECG,channels_v_EEG,projM1_pos,projM1_neg,projM3_pos,projM3_neg,projM5_pos,projM5_neg);
+%for verification
+%[acc_ex1, acc1, pl1, al1, all_error] = hdcpredictproj  (L_SAMPL_DATA_1, SAMPL_DATA_1, L_SAMPL_DATA_3, SAMPL_DATA_3, L_SAMPL_DATA_5, SAMPL_DATA_5,hdc_model, chAM8, iMch1, iMch3, iMch5, D, N, precision, classes, channels_v,channels_v_ECG,channels_v_EEG,projM1,projM3,projM5);
+
+accuracy(N,2) = acc1;
+acc1
+
+%acc_ngram_1(N,j)=acc1;
+acc_ngram_V(N,j)=acc1;
+end
+
+for i = 1:1:length(1:ngram)
+    if acc_ngram_A(i,j) > 0.684
+        met_A_accuracy(j) = 1;
+    else
+        
+    end
+    if acc_ngram_V(i,j) > 0.801
+        met_V_accuracy(j) = 1;
+    end
+end
 
 end
 
