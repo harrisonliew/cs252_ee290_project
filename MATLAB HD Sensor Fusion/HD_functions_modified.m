@@ -396,7 +396,9 @@ function [numPat, AM] = hdctrainproj (labelTrainSet1, labelTrainSet2, labelTrain
                 record3 = mode(v3); 
             end
             record = mode([record1;record2;record3]);
-            ngram = xor(circshift (ngram, [1,1]) , record);
+            circ = circshift (ngram, [1,1]);
+            circ(1) = 0;
+            ngram = xor(circ , record);
         end
             trainVecList = [trainVecList ; ngram];
 	        numPat (labelTrainSet1 (i+N-1)) = numPat (labelTrainSet1 (i+N-1)) + 1;
@@ -495,7 +497,10 @@ function [accExcTrnz, accuracy, predicLabel, actualLabel, all_error] = hdcpredic
             % combine modalities
             record = mode([record1;record2;record3]);
             % bundle
-            sigHV = xor(circshift (sigHV, [1,1]) , record);
+            circ = circshift (sigHV, [1,1]);
+            circ(1) = 0;
+            sigHV = xor(circ , record);
+            %sigHV = xor(circshift (sigHV, [1,1]) , record);
         end
    
 	    [predict_hamm, error, second_error] = hamming(sigHV, AM, classes);

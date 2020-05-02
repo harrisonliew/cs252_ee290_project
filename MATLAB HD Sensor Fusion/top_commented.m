@@ -49,7 +49,7 @@ COMPLETE_1_a_ECG=features_ECG;
 COMPLETE_1_v_EEG=features_EEG;
 COMPLETE_1_a_EEG=features_EEG;
 
-D_full = [10000]; %dimension of the hypervectors
+D_full = [2000]; %dimension of the hypervectors
 for j=1:length(D_full)
 learningFrac = learningrate(1); 
 learningFrac;
@@ -57,7 +57,7 @@ D=D_full(j);
 D
 classes = 2; % level of classes
 precision = 20; %no use
-ngram = 10; % for temporal encode
+ngram = 3; % for temporal encode
 maxL = 2; % for IM gen
  
 channels_v_EXG=channels_v +channels_v_ECG+channels_v_EEG;
@@ -161,7 +161,7 @@ projM6_neg(projM6==-1) = 0;
 projM6_pos(projM6==1) = 0;
 projM6_pos(projM6==-1) = 1;
 
-for N = 1:ngram
+for N = 3:ngram
 % creates ngram for data, rotates through and 
 N
 
@@ -171,7 +171,7 @@ fprintf ('HDC for A\n');
 [numpat_2, hdc_model_2] = hdctrainproj (L_SAMPL_DATA_2, SAMPL_DATA_2, chAM8, iMch2, D, N, precision, channels_a,projM2_pos,projM2_neg); 
 [numpat_4, hdc_model_4] = hdctrainproj (L_SAMPL_DATA_4, SAMPL_DATA_4, chAM8, iMch4, D, N, precision, channels_a_ECG,projM4_pos,projM4_neg); 
 [numpat_6, hdc_model_6] = hdctrainproj (L_SAMPL_DATA_6, SAMPL_DATA_6, chAM8, iMch6, D, N, precision, channels_a_EEG,projM6_pos,projM6_neg); 
-%[numpat, hdc_model] = hdctrainproj (L_SAMPL_DATA_2, L_SAMPL_DATA_4, L_SAMPL_DATA_6,SAMPL_DATA_2, SAMPL_DATA_4, SAMPL_DATA_6, chAM8, iMch2, iMch4, iMch6, D, N, precision, channels_a, channels_a_ECG, channels_a_EEG,projM2_pos, projM2_neg, projM4_pos, projM4_neg, projM6_pos, projM6_neg); 
+%[numpat, hdc_model_2] = hdctrainproj (L_SAMPL_DATA_2, L_SAMPL_DATA_4, L_SAMPL_DATA_6,SAMPL_DATA_2, SAMPL_DATA_4, SAMPL_DATA_6, chAM8, iMch2, iMch4, iMch6, D, N, precision, channels_a, channels_a_ECG, channels_a_EEG,projM2_pos, projM2_neg, projM4_pos, projM4_neg, projM6_pos, projM6_neg); 
 
 %uncomment following for late fusion
 %bundle all the sensors (this is the fusion point)
@@ -205,7 +205,7 @@ fprintf ('HDC for V\n');
  [numpat_1, hdc_model_1] = hdctrainproj (L_SAMPL_DATA_1, SAMPL_DATA_1, chAM8, iMch1, D, N, precision, channels_v,projM1_pos,projM1_neg); 
  [numpat_3, hdc_model_3] = hdctrainproj (L_SAMPL_DATA_3, SAMPL_DATA_3, chAM8, iMch3, D, N, precision, channels_v_ECG,projM3_pos,projM3_neg); 
  [numpat_5, hdc_model_5] = hdctrainproj (L_SAMPL_DATA_5, SAMPL_DATA_5, chAM8, iMch5, D, N, precision, channels_v_EEG,projM5_pos,projM5_neg); 
- %[numpat, hdc_model] = hdctrainproj (L_SAMPL_DATA_1, L_SAMPL_DATA_3, L_SAMPL_DATA_5,SAMPL_DATA_1, SAMPL_DATA_3, SAMPL_DATA_5, chAM8, iMch1, iMch3, iMch5, D, N, precision, channels_v, channels_v_ECG, channels_v_EEG,projM1_pos,projM1_neg, projM3_pos,projM3_neg, projM5_pos,projM5_neg); 
+ %[numpat, hdc_model_1] = hdctrainproj (L_SAMPL_DATA_1, L_SAMPL_DATA_3, L_SAMPL_DATA_5,SAMPL_DATA_1, SAMPL_DATA_3, SAMPL_DATA_5, chAM8, iMch1, iMch3, iMch5, D, N, precision, channels_v, channels_v_ECG, channels_v_EEG,projM1_pos,projM1_neg, projM3_pos,projM3_neg, projM5_pos,projM5_neg); 
 
 
 %class 1
