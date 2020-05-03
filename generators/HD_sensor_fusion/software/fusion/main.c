@@ -50,16 +50,19 @@ int main(){
                 computeNgram(channels_EEG, buffer_EEG, iM_EEG, projM_pos_EEG, projM_neg_EEG, q_EEG);
                 //printf("q_EEG: %llx\n", q_EEG[0]);
                 //majority
-                for (int b = 0; b < bit_dim + 1; b++) {
-                    q[b] = (q_GSR[b] & q_ECG[b]) | (q_ECG[b] & q_EEG[b]) | (q_EEG[b] & q_GSR[b]);
-                }
+                //printf("q: ");
+                //for (int b = bit_dim; b >= 0; b--) {
+                //    q[b] = (q_GSR[b] & q_ECG[b]) | (q_ECG[b] & q_EEG[b]) | (q_EEG[b] & q_GSR[b]);
+                //    printf("%llx", q[b]); 
+                //}
+                //printf("\n");
             } else {
  
                 computeNgram(channels_GSR, buffer_GSR, iM_GSR, projM_pos_GSR, projM_neg_GSR, q_N_GSR);
                 computeNgram(channels_ECG, buffer_ECG, iM_ECG, projM_pos_ECG, projM_neg_ECG, q_N_ECG);
                 computeNgram(channels_EEG, buffer_EEG, iM_EEG, projM_pos_EEG, projM_neg_EEG, q_N_EEG);
                 //majority
-                for (int b = 0; b < bit_dim + 1; b++) {
+                for (int b = bit_dim; b >= 0; b--) {
                     q_N[b] = (q_N_GSR[b] & q_N_ECG[b]) | (q_N_ECG[b] & q_N_EEG[b]) | (q_N_EEG[b] & q_N_GSR[b]);
                 }
  
@@ -107,13 +110,12 @@ int main(){
             printf("Assoc. Mem. cycles: %llu\n", read_cycles() - cpu_start);
         #endif
 	
- 	    printf("Sample %d predicted class: %d\n", ix, class[ix]);
+ 	    printf("Sample %d (predicted, golden) class: (%d, %d)\n", ix, class[ix], labels[ix]);
 
 	}
 
-    // accuracy count
+    // accuracy count (can't print % since can't print floats in RISC-V)
     printf("Correct: %d out of %d\n", correct, numTests); 
-    printf("Accuracy: %.4f\n", (float)correct/(float)numTests);
 
     return 0; 
 }

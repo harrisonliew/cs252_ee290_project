@@ -12,30 +12,30 @@ uint64_t read_cycles() {
     return cycles;
 }
 
-int max_dist_hamm(int distances[classes]){
+int min_dist_hamm(int distances[classes]){
 /*************************************************************************
-	DESCRIPTION: computes the maximum Hamming Distance.
+	DESCRIPTION: computes the minimum Hamming Distance.
 
 	INPUTS:
 		distances     : distances associated to each class
 	OUTPUTS:
-		max_index     : the class related to the maximum distance
+		min_index     : the class related to the minimum distance
 **************************************************************************/
-	int max = distances[0];
-	int max_index = 0;
+	int min = distances[0];
+	int min_index = 0;
 
 	for(int i = 1; i < classes; i++){
 
-		if(max > distances[i]){
+		if(min < distances[i]){
 
-			max = distances[i];
-			max_index = i;
+			min = distances[i];
+			min_index = i;
 
 		}
 
 	}
 
-	return max_index;
+	return min_index;
 }
 
 
@@ -85,7 +85,6 @@ void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint
 
     memset( query, 0, (bit_dim+1)*sizeof(uint64_t));
 
-    //save memory? but can't unroll outer loop...
     uint64_t chHV[channels+1];
     
     int num_majs = channels/64 + 1;
@@ -106,19 +105,30 @@ void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint
 
 		//componentwise majority: insert the value of the ith bit of each chHV row in the variable "majority"
 		//and then compute the number of 1's with the function numberOfSetBits(uint64_t).
+        //if(i == 0) printf("query before majority: %llx\n", query[i]);
+
 		for(int z = 63; z >= 0; z--){
 
 			for(int j = 0 ; j < channels + 1; j++){
-
-				majority[j/64] = majority[j/64] | (((chHV[j] & ( 1 << z)) >> z) << (j%64));
+                
+                //if(i == 0 && z == 63) {
+                //    printf("chHV: %llx\n", chHV[j]);
+                //    printf("chHV shifted: %llx\n", (((chHV[j] & ( 1ULL << z)) >> z) << (j%64)));
+                //}
+				majority[j/64] = majority[j/64] | (((chHV[j] & ( 1ULL << z)) >> z) << (j%64));
 
 			}
             for(int j = 0; j < num_majs; j++){
                 num_set_bits += numberOfSetBits(majority[j]);
+                //if(i == 0) {
+                //    printf("majority[%d] for bit %d: %llx has %d set bits\n", j, z, majority[j], num_set_bits);
+                //}
                 majority[j] = 0;
             }
 
-			if (num_set_bits > channels/2) query[i] = query[i] | ( 1 << z ) ;
+            //if(i == 0) printf("greater? %d\n", num_set_bits > channels/2);
+
+			if (num_set_bits > channels/2) query[i] = query[i] | ( 1ULL << z ) ;
 
 			num_set_bits = 0;
 		}

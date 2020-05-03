@@ -21,14 +21,14 @@ function [M64] = compress_hypervectors(M)
   
     for z = 1 : r_M
         for j = 1 : dim - 1
-            for i = 1 : 32
-                temp = uint64(temp + uint64(bitsll(M(z, (i + (32 * (j - 1)))), (32 - i))));
+            for i = 1 : 64
+                temp = uint64(temp + uint64(bitsll(M(z, (i + (64 * (j - 1)))), (64 - i))));
             end  
             M64(z, j) = temp;
             temp = 0; 
         end   
-        for i = 1 : 16
-            temp = temp + uint64(bitsll(M(z, ((i + (32 * (dim - 1))))), (32 - i)));
+        for i = 1 : rem(c_M, 64)
+            temp = temp + uint64(bitsll(M(z, ((i + (64 * (dim - 1))))), (64 - i)));
         end
         M64(z, dim) = temp;
         temp = 0; 

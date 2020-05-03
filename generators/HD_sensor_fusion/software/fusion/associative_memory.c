@@ -21,7 +21,7 @@ int associative_memory_64bit(uint64_t q_64[bit_dim + 1], uint64_t aM_64[][bit_di
 	hamming_dist(q_64, aM_64, sims);
  
 	//Classification with Hamming Metri
-	class = max_dist_hamm(sims);
+	class = min_dist_hamm(sims);
 
  
 

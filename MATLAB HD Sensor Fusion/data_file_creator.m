@@ -23,7 +23,7 @@ for imod = 1:length(modalities)
     test_set = eval(sprintf('TS_COMPLETE_%d', 2*imod+e));
     fprintf(DID, '//%s signals\n', mod);
     [r,c]=size(test_set);
-    fprintf(DID, 'const float TEST_SET_%s[%d][%d] = {\n', mod, r, c);
+    fprintf(DID, 'static const float TEST_SET_%s[%d][%d] = {\n', mod, r, c);
      for i = 1 : r
         fprintf(DID, '{');
         for j = 1 : c
@@ -42,14 +42,14 @@ for imod = 1:length(modalities)
     projM_pos = eval(sprintf('projM%d_pos', 2*imod+e));
     projM_pos = compress_hypervectors(projM_pos);
     [r,c]=size(projM_pos);
-    fprintf(MID, '\n\n//%s Embedding Vector (pos)\nuint64_t projM_pos_%s[%d][%d] = {\n', mod, mod, r, c);
+    fprintf(MID, '\n\n//%s Embedding Vector (pos)\nstatic uint64_t projM_pos_%s[%d][%d] = {\n', mod, mod, r, c);
     for i = 1 : r
         fprintf(MID, '{');
         for j = 1 : c
             if j == c
-                fprintf(MID, '%d',(projM_pos(i, j)));
+                fprintf(MID, '%uULL',(projM_pos(i, j)));
             else 
-                fprintf(MID, '%d, ',(projM_pos(i, j)));  
+                fprintf(MID, '%uULL, ',(projM_pos(i, j)));  
             end
         end
         
@@ -60,14 +60,14 @@ for imod = 1:length(modalities)
     projM_neg = eval(sprintf('projM%d_neg', 2*imod+e));
     projM_neg = compress_hypervectors(projM_neg);
     [r,c]=size(projM_neg);
-    fprintf(MID, '\n\n//%s Embedding Vector (neg)\nuint64_t projM_neg_%s[%d][%d] = {\n', mod, mod, r, c);
+    fprintf(MID, '\n\n//%s Embedding Vector (neg)\nstatic uint64_t projM_neg_%s[%d][%d] = {\n', mod, mod, r, c);
     for i = 1 : r
         fprintf(MID, '{');
         for j = 1 : c
             if j == c
-                fprintf(MID, '%d',(projM_neg(i, j)));
+                fprintf(MID, '%uULL',(projM_neg(i, j)));
             else 
-                fprintf(MID, '%d, ',(projM_neg(i, j)));  
+                fprintf(MID, '%uULL, ',(projM_neg(i, j)));  
             end
         end
         
@@ -81,15 +81,15 @@ for imod = 1:length(modalities)
     IM = cell2mat(IM');
     IM = compress_hypervectors(IM);
     [r,c]=size(IM);
-    fprintf(MID, '\n\n//%s Item Memory\nuint64_t iM_%s[%d][%d] = {\n', mod, mod, r, c);
+    fprintf(MID, '\n\n//%s Item Memory\nstatic uint64_t iM_%s[%d][%d] = {\n', mod, mod, r, c);
      
     for i = 1 : r
         fprintf(MID, '{');
         for j = 1 : c
             if j == c
-                fprintf(MID, '%d',(IM(i, j)));
+                fprintf(MID, '%uULL',(IM(i, j)));
             else 
-                fprintf(MID, '%d, ',(IM(i, j)));  
+                fprintf(MID, '%uULL, ',(IM(i, j)));  
             end
         end
         
@@ -103,15 +103,15 @@ for imod = 1:length(modalities)
     CIM = cell2mat(CIM');
     CIM = compress_hypervectors(CIM);
     [r,c]=size(CIM);
-    fprintf(MID, '\n\n//%s Continuous Item Memory\nuint64_t ciM_%s[%d][%d] = {\n', mod, mod, r, c);
+    fprintf(MID, '\n\n//%s Continuous Item Memory\nstatic uint64_t ciM_%s[%d][%d] = {\n', mod, mod, r, c);
      
     for i = 1 : r
         fprintf(MID, '{');
         for j = 1 : c
             if j == c
-                fprintf(MID, '%d',(CIM(i, j)));
+                fprintf(MID, '%uULL',(CIM(i, j)));
             else 
-                fprintf(MID, '%d, ',(CIM(i, j)));  
+                fprintf(MID, '%uULL, ',(CIM(i, j)));  
             end
         end
         
@@ -126,15 +126,15 @@ for imod = 1:length(modalities)
         AM = cell2mat(AM');
         AM = compress_hypervectors(AM);
         [r,c]=size(AM);
-        fprintf(MID, '\n\n//%s Associative Memory\nuint64_t aM_%s[%d][%d] = {\n', mod, mod, r, c);
+        fprintf(MID, '\n\n//%s Associative Memory\nstatic uint64_t aM_%s[%d][%d] = {\n', mod, mod, r, c);
          
         for i = 1 : r
             fprintf(MID, '{');
             for j = 1 : c
                 if j == c
-                    fprintf(MID, '%d',(AM(i, j)));
+                    fprintf(MID, '%uULL',(AM(i, j)));
                 else 
-                    fprintf(MID, '%d, ',(AM(i, j)));  
+                    fprintf(MID, '%uULL, ',(AM(i, j)));  
                 end
             end
             
@@ -151,7 +151,7 @@ end
 labels = eval(sprintf('L_TS_COMPLETE_%d - 1', 2+e));
 fprintf(DID, '\n\n//golden labels\n');
 [r,c]=size(labels);
-fprintf(DID, 'const int labels[%d] = {', r);
+fprintf(DID, 'static const int labels[%d] = {', r);
 fprintf(DID, '%d, ', labels(1:end-1));
 fprintf(DID, '%d', labels(end));
 fprintf(DID, '};\n');
@@ -163,15 +163,15 @@ if strcmp(fusion_point, 'early')
     AM = cell2mat(AM');
     AM = compress_hypervectors(AM);
     [r,c]=size(AM);
-    fprintf(MID, '\n\n//Associative Memory\nuint64_t aM[%d][%d] = {\n', r, c);
+    fprintf(MID, '\n\n//Associative Memory\nstatic uint64_t aM[%d][%d] = {\n', r, c);
      
     for i = 1 : r
         fprintf(MID, '{');
         for j = 1 : c
             if j == c
-                fprintf(MID, '%d',(AM(i, j)));
+                fprintf(MID, '%uULL',(AM(i, j)));
             else 
-                fprintf(MID, '%d, ',(AM(i, j)));  
+                fprintf(MID, '%uULL, ',(AM(i, j)));  
             end
         end
         
