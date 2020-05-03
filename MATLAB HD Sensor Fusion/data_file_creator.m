@@ -1,7 +1,7 @@
-%This script creates files "data.h" and "mems_<early/late>.h".
-
-% set this variable before you run this script
-% fusion_point = 'early'; % early or late only
+% DESCRIPTION: This script creates files "data.h" and "mems_<early/late>.h".
+% INPUTS (set these before you run this script):
+%   fusion_point: 'early' or 'late'
+%   emotion: 'valence' or 'arousal'
 
 modalities = ["GSR", "ECG", "EEG"];
 
@@ -10,10 +10,17 @@ MID = fopen ( sprintf('mems_%s.h', fusion_point) , 'w');
 fprintf(DID, '#ifndef DATA_H_\n#define DATA_H_\n\n#include <stdio.h>\n#include "init.h"\n\n');
 fprintf(MID, sprintf('#ifndef MEM_%s_H_\n#define MEM_%s_H_\n\n#include <stdio.h>\n#include "init.h"\n\n', upper(fusion_point), upper(fusion_point)));
 
+if (strcmp(emotion, 'valence'))
+    e = -1;
+else
+    e = 0;
+end
+
 for imod = 1:length(modalities)
     mod = modalities(imod)
 
-    test_set = eval(sprintf('features_%s', mod));
+    % data
+    test_set = eval(sprintf('TS_COMPLETE_%d', 2*imod+e));
     fprintf(DID, '//%s signals\n', mod);
     [r,c]=size(test_set);
     fprintf(DID, 'const float TEST_SET_%s[%d][%d] = {\n', mod, r, c);
@@ -31,7 +38,45 @@ for imod = 1:length(modalities)
     end
     fprintf(DID, '};\n');
 
-    IM = eval(sprintf('iMch%d', 2*imod));
+    % sparse hypervectors
+    projM_pos = eval(sprintf('projM%d_pos', 2*imod+e));
+    projM_pos = compress_hypervectors(projM_pos);
+    [r,c]=size(projM_pos);
+    fprintf(MID, '\n\n//%s Embedding Vector (pos)\nuint64_t projM_pos_%s[%d][%d] = {\n', mod, mod, r, c);
+    for i = 1 : r
+        fprintf(MID, '{');
+        for j = 1 : c
+            if j == c
+                fprintf(MID, '%d',(projM_pos(i, j)));
+            else 
+                fprintf(MID, '%d, ',(projM_pos(i, j)));  
+            end
+        end
+        
+        fprintf(MID, '},\n');
+    end
+    fprintf(MID, '};\n');
+
+    projM_neg = eval(sprintf('projM%d_neg', 2*imod+e));
+    projM_neg = compress_hypervectors(projM_neg);
+    [r,c]=size(projM_neg);
+    fprintf(MID, '\n\n//%s Embedding Vector (neg)\nuint64_t projM_neg_%s[%d][%d] = {\n', mod, mod, r, c);
+    for i = 1 : r
+        fprintf(MID, '{');
+        for j = 1 : c
+            if j == c
+                fprintf(MID, '%d',(projM_neg(i, j)));
+            else 
+                fprintf(MID, '%d, ',(projM_neg(i, j)));  
+            end
+        end
+        
+        fprintf(MID, '},\n');
+    end
+    fprintf(MID, '};\n');
+
+    % item memories
+    IM = eval(sprintf('iMch%d', 2*imod+e));
     IM = IM.values;
     IM = cell2mat(IM');
     IM = compress_hypervectors(IM);
@@ -52,7 +97,8 @@ for imod = 1:length(modalities)
     end
     fprintf(MID, '};\n');
     
-    CIM = eval(sprintf('chAM%d', 2*imod));
+    % continuous item memories
+    CIM = eval(sprintf('chAM%d', 2*imod+e));
     CIM = CIM.values;
     CIM = cell2mat(CIM');
     CIM = compress_hypervectors(CIM);
@@ -75,7 +121,7 @@ for imod = 1:length(modalities)
     
     % separate AMs if late fusion
     if strcmp(fusion_point, 'late')
-        AM = eval(sprintf('hdc_model_%d', 2*imod));
+        AM = eval(sprintf('hdc_model_%d', 2*imod+e));
         AM = AM.values;
         AM = cell2mat(AM');
         AM = compress_hypervectors(AM);
@@ -100,6 +146,15 @@ for imod = 1:length(modalities)
     end
 
 end
+
+% golden labels
+labels = eval(sprintf('L_TS_COMPLETE_%d - 1', 2+e));
+fprintf(DID, '\n\n//golden labels\n');
+[r,c]=size(labels);
+fprintf(DID, 'const int labels[%d] = {', r);
+fprintf(DID, '%d, ', labels(1:end-1));
+fprintf(DID, '%d', labels(end));
+fprintf(DID, '};\n');
 
 % single AM if early fusion
 if strcmp(fusion_point, 'early')

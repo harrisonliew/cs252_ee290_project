@@ -9,7 +9,7 @@ else
 	tests_linux = $(tests:=-linux)
 endif
 
-BENCH_COMMON = $(abs_top_srcdir)/riscv-tests/benchmarks/common
+BENCH_COMMON = $(abs_top_srcdir)/esp-tests/benchmarks/common
 PULP_FUNCS = $(abs_top_srcdir)/pulp/aux_functions.c $(abs_top_srcdir)/pulp/associative_memory.c
 
 CFLAGS := $(CFLAGS) \
@@ -24,8 +24,8 @@ CFLAGS := $(CFLAGS) \
 	-march=rv64gc -Wa,-march=rv64gcxhwacha \
 	-lm \
 	-lgcc \
-	-I$(abs_top_srcdir)/riscv-tests \
-	-I$(abs_top_srcdir)/riscv-tests/env \
+	-I$(abs_top_srcdir)/esp-tests \
+	-I$(abs_top_srcdir)/esp-tests/env \
 	-I$(abs_top_srcdir)/pulp \
 	-I$(abs_top_srcdir) \
 	-I$(BENCH_COMMON) \

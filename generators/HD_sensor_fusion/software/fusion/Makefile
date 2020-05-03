@@ -9,8 +9,8 @@ else
 	tests_linux = $(tests:=-linux)
 endif
 
-BENCH_COMMON = $(abs_top_srcdir)/riscv-tests/benchmarks/common
-FUSION_FUNCS = $(abs_top_srcdir)/pulp/fusion_funcs.c $(abs_top_srcdir)/pulp/associative_memory.c
+BENCH_COMMON = $(abs_top_srcdir)/esp-tests/benchmarks/common
+FUSION_FUNCS = $(abs_top_srcdir)/fusion/fusion_funcs.c $(abs_top_srcdir)/fusion/associative_memory.c
 
 CFLAGS := $(CFLAGS) \
 	-DPREALLOCATE=1 \
@@ -24,9 +24,9 @@ CFLAGS := $(CFLAGS) \
 	-march=rv64gc -Wa,-march=rv64gcxhwacha \
 	-lm \
 	-lgcc \
-	-I$(abs_top_srcdir)/riscv-tests \
-	-I$(abs_top_srcdir)/riscv-tests/env \
-	-I$(abs_top_srcdir)/pulp \
+	-I$(abs_top_srcdir)/esp-tests \
+	-I$(abs_top_srcdir)/esp-tests/env \
+	-I$(abs_top_srcdir)/fusion \
 	-I$(abs_top_srcdir) \
 	-I$(BENCH_COMMON) \
 	-DID_STRING=$(ID_STRING) \

@@ -1,8 +1,16 @@
+#include <stdio.h>
 #include <math.h>
+#include <string.h>
+#include "init.h"
 #include "fusion_funcs.h"
 
 #define ROUND(num) ((num - floorf(num) > 0.5f) ? ceilf(num) : floorf(num))
 
+uint64_t read_cycles() {
+    uint64_t cycles;
+    asm volatile ("rdcycle %0" : "=r" (cycles));
+    return cycles;
+}
 
 int max_dist_hamm(int distances[classes]){
 /*************************************************************************
@@ -32,7 +40,7 @@ int max_dist_hamm(int distances[classes]){
 
 
 
-void hamming_dist(uint32_t q[bit_dim + 1], uint32_t aM[][bit_dim + 1], int sims[classes]){
+void hamming_dist(uint64_t q[bit_dim + 1], uint64_t aM[][bit_dim + 1], int sims[classes]){
 /**************************************************************************
 	DESCRIPTION: computes the Hamming Distance for each class.
 
@@ -46,7 +54,7 @@ void hamming_dist(uint32_t q[bit_dim + 1], uint32_t aM[][bit_dim + 1], int sims[
 
 	int r_tmp = 0;
 
-	uint32_t tmp = 0;
+	uint64_t tmp = 0;
 	for(int i = 0; i < classes; i++){
 		for(int j = 0; j < bit_dim + 1; j++){
 
@@ -59,9 +67,7 @@ void hamming_dist(uint32_t q[bit_dim + 1], uint32_t aM[][bit_dim + 1], int sims[
 	}
 }
 
-uint32_t chHV[channels + 1][bit_dim + 1] = {0};
-
-void computeNgram(float buffer[channels], uint32_t iM[][bit_dim + 1], uint32_t chAM[][bit_dim + 1], uint32_t query[bit_dim + 1]){
+void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint64_t projM_pos[][bit_dim + 1], uint64_t projM_neg[][bit_dim + 1], uint64_t query[bit_dim + 1]){
 /*************************************************************************
 	DESCRIPTION: computes the N-gram
 
@@ -73,56 +79,59 @@ void computeNgram(float buffer[channels], uint32_t iM[][bit_dim + 1], uint32_t c
 		query    :  query hypervector
 **************************************************************************/
 
-	int r[channels];
+    #if PROFILE == 1
+        uint64_t cpu_start = read_cycles();
+    #endif
 
-	int ix;
-	uint32_t tmp = 0;
-	int i, j;
-	uint32_t chHV[channels + 1][bit_dim + 1] = {0};
+    memset( query, 0, (bit_dim+1)*sizeof(uint64_t));
 
-	//Quantization: each sample is rounded to the nearest integer
-	for(i = 0; i < channels ; i++){
-
-		r[i] = (int)(ROUND((float)buffer[i]));
-
-	}
+    //save memory? but can't unroll outer loop...
+    uint64_t chHV[channels+1];
+    
+    int num_majs = channels/64 + 1;
+	uint64_t majority[num_majs];
+    memset( majority, 0, num_majs*sizeof(uint64_t));
+    int num_set_bits = 0;
 
 	//Spatial Encoder: captures the spatial information for a given time-aligned samples of channels
-	for(i = 0; i < bit_dim + 1; i++){
+	for(int i = 0; i < bit_dim + 1; i++){
 
-		query[i] = 0;
-		for(j = 0; j < channels; j++){
+		for(int j = 0; j < channels; j++){
 
-			ix = r[j];
-			tmp = iM[ix][i] ^ chAM[j][i];
-			chHV[j][i] = tmp;
+            chHV[j] = iM[j][i] ^ (buffer[j] > 0.0 ? projM_pos[j][i] : projM_neg[j][i]);
 
 		}
-		//this is done to make the dimension of the matrix for the componentwise majority odd.
-		chHV[channels][i] = chHV[0][i] ^ chHV[1][i];
+		//this is done in the Matlab for some reason???
+		chHV[channels] = chHV[channels-1] ^ chHV[1];
 
 		//componentwise majority: insert the value of the ith bit of each chHV row in the variable "majority"
-		//and then compute the number of 1's with the function numberOfSetBits(uint32_t).
-		uint32_t majority = 0;
-
-		for(int z = 31; z >= 0; z--){
+		//and then compute the number of 1's with the function numberOfSetBits(uint64_t).
+		for(int z = 63; z >= 0; z--){
 
 			for(int j = 0 ; j < channels + 1; j++){
 
-				majority = majority | (((chHV[j][i] & ( 1 << z)) >> z) << j);
-
+				majority[j/64] = majority[j/64] | (((chHV[j] & ( 1 << z)) >> z) << (j%64));
 
 			}
-			if (numberOfSetBits(majority) > 2) query[i] = query[i] | ( 1 << z ) ;
+            for(int j = 0; j < num_majs; j++){
+                num_set_bits += numberOfSetBits(majority[j]);
+                majority[j] = 0;
+            }
 
-			majority = 0;
+			if (num_set_bits > channels/2) query[i] = query[i] | ( 1 << z ) ;
+
+			num_set_bits = 0;
 		}
 
 	}
 
+    #if PROFILE == 1
+        printf("spatial encoding cycles: %llu\n", read_cycles() - cpu_start);
+    #endif
+
 }
 
-int numberOfSetBits(uint32_t i)
+int numberOfSetBits(uint64_t i)
 {
 /*************************************************************************
 	DESCRIPTION:   computes the number of 1's
@@ -132,7 +141,7 @@ int numberOfSetBits(uint32_t i)
 
 **************************************************************************/
 
-     i = i - ((i >> 1) & 0x55555555);
-     i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
-     return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
+     i = i - ((i >> 1) & 0x5555555555555555);
+     i = (i & 0x3333333333333333) + ((i >> 2) & 0x3333333333333333);
+     return (((i + (i >> 4)) & 0x0F0F0F0F0F0F0F0F) * 0x0101010101010101) >> 56;
 }

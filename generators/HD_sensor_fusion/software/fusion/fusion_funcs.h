@@ -3,9 +3,10 @@
  
 #include "init.h"
 
-void hamming_dist(uint32_t q[bit_dim + 1], uint32_t aM[][bit_dim + 1], int sims[classes]);
+uint64_t read_cycles();
+void hamming_dist(uint64_t q[bit_dim + 1], uint64_t aM[][bit_dim + 1], int sims[classes]);
 int max_dist_hamm(int distances[classes]);
-void computeNgram(float buffer[channels], uint32_t iM[][bit_dim + 1], uint32_t chAM[][bit_dim + 1], uint32_t query[bit_dim + 1]);
-int numberOfSetBits(uint32_t i);
+void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint64_t projM_pos[][bit_dim + 1], uint64_t projM_neg[][bit_dim + 1], uint64_t query[bit_dim + 1]);
+int numberOfSetBits(uint64_t i);
 
 #endif

@@ -3,35 +3,26 @@
 
 #include <stdint.h>
 #include <math.h>
-// #include "omp.h"
 
- 
-
-// #define PULP_L1_DATA RT_L1_DATA
-// #define PULP_L2_DATA RT_L2_DATA
- 
-
-//dimension of the hypervectors
+//dimension of the hypervectors (must be even)
 #define dimension 10000
 //number of classes to be classify
-#define classes 5
+#define classes 2
 //number of acquisition's channels
-#define channels 4
+#define channels_GSR 32
+#define channels_ECG 77
+#define channels_EEG 105
 //dimension of the hypervectors after compression (dimension/32 rounded to the smallest integer)
-#define bit_dim 312
+#define bit_dim 156
 //number of input samples
-#define NUMBER_OF_INPUT_SAMPLES 14883
-//dimension of the N-grams (models for N = 1 and N = 5 are contained in data.h)
-#define N 5
+#define NUMBER_OF_INPUT_SAMPLES 380
+//dimension of the N-grams (models for N = 3 are contained in data.h)
+#define N 3
 //CHANNELS_VOTING for the componentwise majority must be odd
 #define CHANNELS_VOTING channels + 1
-//Set to 1 to use the profiling's functions
-#define HWPERF 0
-//Set to 1 to use the built-ins with Wolf, 0 for the execution without built-ins. 
-#define WOLF 1
+//sparsity of bipolar mapping
+#define sparsity 0.7
 
-#define TEST 1
-
-
+#define PROFILE 0
 
 #endif

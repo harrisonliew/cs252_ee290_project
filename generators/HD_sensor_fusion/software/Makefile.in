@@ -4,8 +4,8 @@ XLEN            := @XLEN@
 RISCVTOOLS      := @RISCVTOOLS@
 ROCC = examples
 
-.PHONY: all clean pulp
-all: pulp
+.PHONY: all clean pulp fusion
+all: pulp fusion
 
 vars = \
 	abs_top_srcdir=$(abs_top_srcdir) \
@@ -18,5 +18,10 @@ pulp:
 	mkdir -p $@
 	$(MAKE) -C $@ -f $(abs_top_srcdir)/$@/Makefile $(vars)
 
+fusion:
+	mkdir -p $@
+	$(MAKE) -C $@ -f $(abs_top_srcdir)/$@/Makefile $(vars)
+
 clean:
 	$(MAKE) -C pulp -f $(abs_top_srcdir)/pulp/Makefile abs_top_srcdir=$(abs_top_srcdir) PREFIX=$(ROCC)-pulp clean
+	$(MAKE) -C fusion -f $(abs_top_srcdir)/fusion/Makefile abs_top_srcdir=$(abs_top_srcdir) PREFIX=$(ROCC)-fusion clean
