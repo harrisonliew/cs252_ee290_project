@@ -10,12 +10,9 @@
 #include "mems_early.h"
 //#include "mems_late.h"
 
-float buffer_GSR[channels_GSR];
-float buffer_ECG[channels_ECG];
-float buffer_EEG[channels_EEG];
-
 int main(){
  
+    float buffer[channels_EEG]; //EEG has the most channels
           
 	uint64_t overflow = 0;
 	uint64_t old_overflow = 0;
@@ -37,13 +34,14 @@ int main(){
 
     //spatially encode first N samples
 	for(int z = 0; z < N; z++){
-        memcpy(buffer_GSR, TEST_SET_GSR[z], sizeof(buffer_GSR));
-        memcpy(buffer_ECG, TEST_SET_ECG[z], sizeof(buffer_ECG));
-        memcpy(buffer_EEG, TEST_SET_EEG[z], sizeof(buffer_EEG));
+        memcpy(buffer, TEST_SET_GSR[z], sizeof(TEST_SET_GSR[z]));
+        computeNgram(channels_GSR, buffer, iM_GSR, projM_pos_GSR, projM_neg_GSR, q_GSR);
 
-        computeNgram(channels_GSR, buffer_GSR, iM_GSR, projM_pos_GSR, projM_neg_GSR, q_GSR);
-        computeNgram(channels_ECG, buffer_ECG, iM_ECG, projM_pos_ECG, projM_neg_ECG, q_ECG);
-        computeNgram(channels_EEG, buffer_EEG, iM_EEG, projM_pos_EEG, projM_neg_EEG, q_EEG);
+        memcpy(buffer, TEST_SET_ECG[z], sizeof(TEST_SET_ECG[z]));
+        computeNgram(channels_ECG, buffer, iM_ECG, projM_pos_ECG, projM_neg_ECG, q_ECG);
+
+        memcpy(buffer, TEST_SET_EEG[z], sizeof(TEST_SET_EEG[z]));
+        computeNgram(channels_EEG, buffer, iM_EEG, projM_pos_EEG, projM_neg_EEG, q_EEG);
 
         //majority
         for (int b = bit_dim; b >= 0; b--) {
@@ -128,14 +126,15 @@ int main(){
                 memcpy(q[z], q[z+1], sizeof(q[z]));
             }
             #endif
-
-            memcpy(buffer_GSR, TEST_SET_GSR[ix+N], sizeof(buffer_GSR));
-            memcpy(buffer_ECG, TEST_SET_ECG[ix+N], sizeof(buffer_ECG));
-            memcpy(buffer_EEG, TEST_SET_EEG[ix+N], sizeof(buffer_EEG));
             
-            computeNgram(channels_GSR, buffer_GSR, iM_GSR, projM_pos_GSR, projM_neg_GSR, q_GSR);
-            computeNgram(channels_ECG, buffer_ECG, iM_ECG, projM_pos_ECG, projM_neg_ECG, q_ECG);
-            computeNgram(channels_EEG, buffer_EEG, iM_EEG, projM_pos_EEG, projM_neg_EEG, q_EEG);
+            memcpy(buffer, TEST_SET_GSR[ix+N], sizeof(TEST_SET_GSR[ix+N]));
+            computeNgram(channels_GSR, buffer, iM_GSR, projM_pos_GSR, projM_neg_GSR, q_GSR);
+
+            memcpy(buffer, TEST_SET_ECG[ix+N], sizeof(TEST_SET_ECG[ix+N]));
+            computeNgram(channels_ECG, buffer, iM_ECG, projM_pos_ECG, projM_neg_ECG, q_ECG);
+
+            memcpy(buffer, TEST_SET_EEG[ix+N], sizeof(TEST_SET_EEG[ix+N]));
+            computeNgram(channels_EEG, buffer, iM_EEG, projM_pos_EEG, projM_neg_EEG, q_EEG);
 
             //majority
             for (int b = bit_dim; b >= 0; b--) {

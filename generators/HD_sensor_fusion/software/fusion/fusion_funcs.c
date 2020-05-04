@@ -81,18 +81,25 @@ void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint
 
     #if PROFILE == 1
         uint64_t cpu_start = read_cycles();
+        uint64_t mux_start, mux_end, maj_start, maj_end;
     #endif
 
     memset( query, 0, (bit_dim+1)*sizeof(uint64_t));
 
-    uint64_t chHV[channels+1];
+    //uint64_t chHV[channels+1];
     
     int num_majs = (channels+1)/64 + 1;
-	uint64_t majority[num_majs];
-    memset( majority, 0, num_majs*sizeof(uint64_t));
+	//uint64_t majority[num_majs];
+    //memset( majority, 0, num_majs*sizeof(uint64_t));
+
+    uint64_t chHV[num_majs*64];
 
 	//Spatial Encoder: captures the spatial information for a given time-aligned samples of channels
 	for(int i = 0; i < bit_dim + 1; i++){
+
+        #if PROFILE == 1
+            mux_start = read_cycles();
+        #endif
 
 		for(int j = 0; j < channels; j++){
 
@@ -103,29 +110,52 @@ void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint
 		//this is done in the Matlab for some reason???
 		chHV[channels] = chHV[channels-1] ^ chHV[1];
 
-		//componentwise majority: insert the value of the ith bit of each chHV row in the variable "majority"
+        for(int j = channels+1; j < num_majs*64; j++){
+            chHV[j] = 0;
+        }
+
+        #if PROFILE == 1
+            mux_end = read_cycles();
+        #endif
+
+        //much faster componentwise majority: do some 64 bit matrix transposes
 		//and then compute the number of 1's with the function numberOfSetBits(uint64_t).
-		for(int z = 63; z >= 0; z--){
+        uint64_t t, mask;
 
-			for(int j = 0 ; j < channels + 1; j++){
-                
-				majority[j/64] = majority[j/64] | (((chHV[j] & ( 1ULL << z)) >> z) << (j%64));
+        #if PROFILE == 1
+            maj_start = read_cycles();
+        #endif
 
-			}
-
-            int num_set_bits = 0;
-            for(int j = 0; j < num_majs; j++){
-                num_set_bits += numberOfSetBits(majority[j]);
-                majority[j] = 0;
+        for (int n = 0; n < num_majs*64; n += 64) {
+            //taken from Hacker's Delight. ~400 instructions.
+            mask = 0x00000000FFFFFFFFULL;
+            for (int j = 32; j != 0; j = j >> 1, mask = mask ^ (mask << j)) {
+                for (int k = 0; k < 64; k = (k + j + 1) & ~j) {
+                    t = (chHV[n+k] ^ (chHV[n+k+j] >> j)) & mask;
+                    chHV[n+k] = chHV[n+k] ^ t;
+                    chHV[n+k+j] = chHV[n+k+j] ^ (t << j);
+                }
             }
+        }
+        
+        #if PROFILE == 1
+            maj_end = read_cycles();
+        #endif
 
-			if (num_set_bits > channels/2) query[i] = query[i] | ( 1ULL << z ) ;
-
-		}
+        //note row indices swapped with desired bit position after transpose
+		for(int z = 63; z >= 0; z--){
+            int num_set_bits = 0;
+            for (int n = 63; n < num_majs*64; n += 64) {
+                num_set_bits += numberOfSetBits(chHV[n-z]);
+            }
+            if (num_set_bits > channels/2) query[i] = query[i] | ( 1ULL << z ) ;
+        }
 
 	}
 
     #if PROFILE == 1
+        printf("muxing cycles: %llu\n", mux_end - mux_start);
+        printf("majority cycles: %llu\n", maj_end - maj_start);
         printf("spatial encoding cycles: %llu\n", read_cycles() - cpu_start);
     #endif
 
