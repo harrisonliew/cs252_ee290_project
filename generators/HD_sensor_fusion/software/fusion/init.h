@@ -22,6 +22,9 @@
 #define CHANNELS_VOTING channels + 1
 //sparsity of bipolar mapping
 #define sparsity 0.7
+//number of bits to shift by in temporal encoder
+//64b implementation will not do circular
+#define temporal_shift 64
 
 #define PROFILE 0
 

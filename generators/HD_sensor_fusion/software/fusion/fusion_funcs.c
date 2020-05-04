@@ -26,7 +26,7 @@ int min_dist_hamm(int distances[classes]){
 
 	for(int i = 1; i < classes; i++){
 
-		if(min < distances[i]){
+		if(min > distances[i]){
 
 			min = distances[i];
 			min_index = i;
@@ -87,16 +87,16 @@ void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint
 
     uint64_t chHV[channels+1];
     
-    int num_majs = channels/64 + 1;
+    int num_majs = (channels+1)/64 + 1;
 	uint64_t majority[num_majs];
     memset( majority, 0, num_majs*sizeof(uint64_t));
-    int num_set_bits = 0;
 
 	//Spatial Encoder: captures the spatial information for a given time-aligned samples of channels
 	for(int i = 0; i < bit_dim + 1; i++){
 
 		for(int j = 0; j < channels; j++){
 
+            // 0.0 is not checked (highly unlikely to be exactly 0)
             chHV[j] = iM[j][i] ^ (buffer[j] > 0.0 ? projM_pos[j][i] : projM_neg[j][i]);
 
 		}
@@ -105,32 +105,22 @@ void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint
 
 		//componentwise majority: insert the value of the ith bit of each chHV row in the variable "majority"
 		//and then compute the number of 1's with the function numberOfSetBits(uint64_t).
-        //if(i == 0) printf("query before majority: %llx\n", query[i]);
-
 		for(int z = 63; z >= 0; z--){
 
 			for(int j = 0 ; j < channels + 1; j++){
                 
-                //if(i == 0 && z == 63) {
-                //    printf("chHV: %llx\n", chHV[j]);
-                //    printf("chHV shifted: %llx\n", (((chHV[j] & ( 1ULL << z)) >> z) << (j%64)));
-                //}
 				majority[j/64] = majority[j/64] | (((chHV[j] & ( 1ULL << z)) >> z) << (j%64));
 
 			}
+
+            int num_set_bits = 0;
             for(int j = 0; j < num_majs; j++){
                 num_set_bits += numberOfSetBits(majority[j]);
-                //if(i == 0) {
-                //    printf("majority[%d] for bit %d: %llx has %d set bits\n", j, z, majority[j], num_set_bits);
-                //}
                 majority[j] = 0;
             }
 
-            //if(i == 0) printf("greater? %d\n", num_set_bits > channels/2);
-
 			if (num_set_bits > channels/2) query[i] = query[i] | ( 1ULL << z ) ;
 
-			num_set_bits = 0;
 		}
 
 	}
