@@ -1,0 +1,9 @@
+1) steady in predict mode, NGRAM is full, continuously generating predictions with every new incoming spatial vector
+
+	Bouncing between IDLE and FORWARD_QUERY 
+
+2) new spatial vector comes in with different mode (train), possibly different label?
+
+	IDLE -> IDLE, no bundle!
+
+3) new spatial vector comes in with same mode (train), same label
