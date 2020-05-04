@@ -26,6 +26,6 @@
 //64b implementation will not do circular
 #define temporal_shift 64
 
-#define PROFILE 0
+#define PROFILE 1
 
 #endif
