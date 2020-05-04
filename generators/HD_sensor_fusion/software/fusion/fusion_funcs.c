@@ -67,11 +67,12 @@ void hamming_dist(uint64_t q[bit_dim + 1], uint64_t aM[][bit_dim + 1], int sims[
 	}
 }
 
-void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint64_t projM_pos[][bit_dim + 1], uint64_t projM_neg[][bit_dim + 1], uint64_t query[bit_dim + 1]){
+void computeNgram(int mod_ch[3], float buffer[channels], uint64_t iM[][bit_dim + 1], uint64_t projM_pos[][bit_dim + 1], uint64_t projM_neg[][bit_dim + 1], uint64_t query[bit_dim + 1]){
 /*************************************************************************
 	DESCRIPTION: computes the N-gram
 
 	INPUTS:
+        mod_ch   :  number of channels per modality
 		buffer   :  input data
 		iM       :	Item Memory for the IDs of channels
 		chAM     :  Continuous Item Memory for the values of a channel
@@ -86,11 +87,7 @@ void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint
 
     memset( query, 0, (bit_dim+1)*sizeof(uint64_t));
 
-    //uint64_t chHV[channels+1];
-    
-    int num_majs = (channels+1)/64 + 1;
-	//uint64_t majority[num_majs];
-    //memset( majority, 0, num_majs*sizeof(uint64_t));
+    int num_majs = channels/64 + 1;
 
     uint64_t chHV[num_majs*64];
 
@@ -101,16 +98,27 @@ void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint
             mux_start = read_cycles();
         #endif
 
+        int cur_mod_i = 0;
+        int cur_mod_ch = mod_ch[cur_mod_i];
+        int chHV2_i = 1;
 		for(int j = 0; j < channels; j++){
 
+            if(j == cur_mod_ch) { 
+		        //this is done in the Matlab for some reason???
+		        chHV[j] = chHV[j-1] ^ chHV[chHV2_i];
+                chHV2_i = cur_mod_ch + 2;
+                cur_mod_i++;
+                cur_mod_ch += mod_ch[cur_mod_i] + 1;
+                continue;
+            }
+
             // 0.0 is not checked (highly unlikely to be exactly 0)
-            chHV[j] = iM[j][i] ^ (buffer[j] > 0.0 ? projM_pos[j][i] : projM_neg[j][i]);
+            chHV[j] = iM[j-cur_mod_i][i] ^ (buffer[j-cur_mod_i] > 0.0 ? projM_pos[j-cur_mod_i][i] : projM_neg[j-cur_mod_i][i]);
 
 		}
-		//this is done in the Matlab for some reason???
-		chHV[channels] = chHV[channels-1] ^ chHV[1];
 
-        for(int j = channels+1; j < num_majs*64; j++){
+        //for(int j = channels+1; j < num_majs*64; j++){
+        for(int j = channels; j < num_majs*64; j++){
             chHV[j] = 0;
         }
 

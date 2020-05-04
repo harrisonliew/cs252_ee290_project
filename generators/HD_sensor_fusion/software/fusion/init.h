@@ -12,6 +12,8 @@
 #define channels_GSR 32
 #define channels_ECG 77
 #define channels_EEG 105
+//combined channels with extra rows added per modality
+#define channels 217
 //dimension of the hypervectors after compression (dimension/32 rounded to the smallest integer)
 #define bit_dim 156
 //number of input samples
