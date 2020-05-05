@@ -116,3 +116,6 @@
 [submodule "vlsi/hammer-intech22-plugin"]
 	path = vlsi/hammer-intech22-plugin
 	url = git@bwrcrepo.eecs.berkeley.edu:intech22/hammer-intech22-plugin.git
+[submodule "vlsi/hammer-tstech28-plugin"]
+	path = vlsi/hammer-tstech28-plugin
+	url = git@bwrcrepo.eecs.berkeley.edu:tstech28/hammer-tstech28-plugin.git
