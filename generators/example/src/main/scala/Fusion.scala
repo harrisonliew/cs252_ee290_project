@@ -78,7 +78,7 @@ class FusionMMIOBlackBox(val c: FusionParams) extends BlackBox with HasBlackBoxR
 class FusionMemory(val width: Int, val addrBits: Int) extends Module {
   val io = IO(new Bundle{
     val in = Input(UInt(width.W))
-    val out = Input(UInt(width.W))
+    val out = Output(UInt(width.W))
     val addr = Input(UInt(addrBits.W))
     val wr = Input(Bool()) // 0 = read, 1 = write
   })
@@ -88,6 +88,7 @@ class FusionMemory(val width: Int, val addrBits: Int) extends Module {
   val rwPort = mem(io.addr)
   when(io.wr) {
     rwPort := io.in
+    io.out := 0.U.asTypeOf(io.out)
   } .otherwise {
     io.out := rwPort
   }
@@ -125,13 +126,13 @@ trait FusionModule extends HasRegMap {
   val state = RegInit(idle)
   val memCnt = RegInit(0.U(log2Ceil(c.inputChannels).W))
 
-  switch (state) {
-    is (idle) {
+  state match {
+    case idle => {
       mode := 2.U // invalid
       memWR := memR_all
       state := load_mems
     }
-    is (load_mems) {
+    case load_mems => {
       mode := 2.U // invalid
       // TODO: memory loading sequence from training
       when(memCnt < c.channelsGSR.U) {
@@ -149,10 +150,15 @@ trait FusionModule extends HasRegMap {
       }
       memCnt := memCnt + 1.U
     }
-    is (predict) {
+    case predict => {
       mode := 0.U
       memWR := memR_all
       state := predict
+    }
+    case _ => {
+      mode := 2.U
+      memWR := memR_all
+      state := idle
     }
   }
 
@@ -220,7 +226,7 @@ trait FusionModule extends HasRegMap {
   )
 }
 
-class FusionTL(params: FusionParams, beatBytes: Int)(implicit p: Parameters)
+class FusionTL(val params: FusionParams, beatBytes: Int)(implicit p: Parameters)
   extends TLRegisterRouter(
     params.address, "fusion", Seq("ucbbar,fusion"),
     beatBytes = beatBytes)(
@@ -230,9 +236,6 @@ class FusionTL(params: FusionParams, beatBytes: Int)(implicit p: Parameters)
 trait CanHavePeripheryFusion { this: BaseSubsystem =>
   private val portName = "fusion"
 
-  val fusion = p(FusionKey).map { params => LazyModule(new FusionTL(params, pbus.beatBytes)(p)) }
-  fusion.foreach { x => pbus.toVariableWidthSlave(Some(portName)) { x.node } }
-  /*
   val fusion = p(FusionKey) match {
     case Some(params) => {
       val fusion = LazyModule(new FusionTL(params, pbus.beatBytes)(p))
@@ -241,14 +244,10 @@ trait CanHavePeripheryFusion { this: BaseSubsystem =>
     }
     case None => None
   }
-  */
 }
 
 trait CanHavePeripheryFusionModuleImp extends LazyModuleImp {
   val outer: CanHavePeripheryFusion
-  val fusion_busy = outer.fusion.map { x => IO(Output(Bool())) }
-  outer.fusion.foreach { x => fusion_busy.get := x.module.io.fusion_busy }
-  /*
   val fusion_busy = outer.fusion match {
     case Some(fusion) => {
       val busy = IO(Output(Bool()))
@@ -257,5 +256,4 @@ trait CanHavePeripheryFusionModuleImp extends LazyModuleImp {
     }
     case None => None
   }
-  */
 }
