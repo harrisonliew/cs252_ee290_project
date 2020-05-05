@@ -12,6 +12,7 @@ import freechips.rocketchip.tilelink._
 import freechips.rocketchip.util.UIntIsOneOf
 
 case class FusionParams(
+  early_late: String = "early",
   address: BigInt = 0x2000,
   hvDim: Int = 2000,
   classes: Int = 2,
@@ -63,14 +64,23 @@ class FusionMMIOBlackBox(val c: FusionParams) extends BlackBox with HasBlackBoxR
 {
   val io = IO(new FusionIO(c))
 
-  override def desiredName = "hdc_top"
+  override def desiredName = if (c.early_late == "early") "hdc_top" else "hdc_top_late"
 
-  addResource("/vsrc/hdc_top.v")
-  addResource("/vsrc/const.vh")
-  addResource("/vsrc/associative_memory/associative_memory.v")
-  addResource("/vsrc/spatial_encoder/spatial_encoder_sram.v")
-  addResource("/vsrc/temporal_encoder/temporal_encoder.v")
-  addResource("/vsrc/support_circuits/spatial_accumulator.v")
+  if (c.early_late == "early") {
+    addResource("/vsrc/hdc_top.v")
+    addResource("/vsrc/const.vh")
+    addResource("/vsrc/associative_memory/associative_memory.v")
+    addResource("/vsrc/spatial_encoder/spatial_encoder_sram.v")
+    addResource("/vsrc/temporal_encoder/temporal_encoder.v")
+    addResource("/vsrc/support_circuits/spatial_accumulator.v")
+  } else {
+    addResource("/vsrc/hdc_top_late.v")
+    addResource("/vsrc/const.vh")
+    addResource("/vsrc/associative_memory/associative_memory_late.v")
+    addResource("/vsrc/spatial_encoder/spatial_encoder_sram_late.v")
+    addResource("/vsrc/temporal_encoder/temporal_encoder.v")
+    addResource("/vsrc/support_circuits/spatial_accumulator.v")
+  }
 }
 
 class FusionMemory(val width: Int, val addrBits: Int) extends Module {

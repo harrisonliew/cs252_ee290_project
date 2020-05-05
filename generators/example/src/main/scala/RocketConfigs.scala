@@ -96,6 +96,18 @@ class FusionRocketConfig extends Config(
   new freechips.rocketchip.subsystem.WithNBigCores(1) ++
   new freechips.rocketchip.system.BaseConfig)
 
+class LateFusionRocketConfig extends Config(
+  new WithTSI ++
+  new WithNoGPIO ++
+  new WithUART ++
+  new WithLateFusion ++
+  new WithBootROM ++
+  new freechips.rocketchip.subsystem.WithNoMMIOPort ++
+  new freechips.rocketchip.subsystem.WithNoSlavePort ++
+  new freechips.rocketchip.subsystem.WithInclusiveCache ++
+  new freechips.rocketchip.subsystem.WithNBigCores(1) ++
+  new freechips.rocketchip.system.BaseConfig)
+
 // DOC include start: GCDTLRocketConfig
 class GCDTLRocketConfig extends Config(
   new WithTSI ++
