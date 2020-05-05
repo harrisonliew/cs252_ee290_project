@@ -1,6 +1,6 @@
 `include "const.vh"
 
-module spatial_encoder
+module spatial_encoder_sram
 (
 	// global ports
 	input Clk_CI, Reset_RI, 

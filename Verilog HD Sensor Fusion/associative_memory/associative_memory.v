@@ -60,6 +60,7 @@ reg [`DISTANCE_WIDTH-1:0] AdderOut_A_D, AdderOut_V_D;
 wire CompRegisterSEN_A_S, CompRegisterSEN_V_S;
 reg OutputBuffersEN_S, ShiftMemoryEN_S, QueryHypervectorEN_S, CompRegisterEN_S, CompRegisterCLR_S, ShiftCntrEN_S, ShiftCntrCLR_S;
 wire ShiftComplete_S; 
+wire [12:0] shift_start, shift_end;
 
 
 //rotating memory
@@ -81,15 +82,35 @@ wire ShiftComplete_S;
 //Set next input data
 assign QueryHypervector_DN = HypervectorIn_DI;
 
+reg [0:`HV_DIMENSION-1] next_A_class, next_V_class;
+always @(*) begin
+	if (ShiftComplete_S)
+		next_A_class = AM_A_class_P;
+	else
+		next_A_class = AM_A[shift_start:shift_end];
+	end
+end
+
+always @(*) begin
+	if (ShiftComplete_S)
+		next_V_class = AM_V_class_P;
+	else
+		next_V_class = AM_V[shift_start:shift_end];
+	end
+end
+
+assign shift_start = (ShiftCntr_SP-1)*`HV_DIMENSION;
+assign shift_end = (ShiftCntr_SP-1)*`HV_DIMENSION+`HV_DIMENSION-1;
+
 //A
 //Set next class
-assign AM_A_class_N = (ShiftComplete_S) ? AM_A_class_P : AM_A[((ShiftCntr_SP-1)*`HV_DIMENSION):((ShiftCntr_SP-1)*`HV_DIMENSION+`HV_DIMENSION-1)];
+assign AM_A_class_N = next_A_class;
 //Similarity
 assign SimilarityOut_A_D = AM_A_class_P ^ QueryHypervector_DP;
 
 //V
 //Set next class
-assign AM_V_class_N = (ShiftComplete_S) ? AM_V_class_P : AM_V[((ShiftCntr_SP-1)*`HV_DIMENSION):((ShiftCntr_SP-1)*`HV_DIMENSION+`HV_DIMENSION-1)];
+assign AM_V_class_N = next_V_class;
 //Similarity
 assign SimilarityOut_V_D = AM_V_class_P ^ QueryHypervector_DP;
 
