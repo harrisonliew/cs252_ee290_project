@@ -50,10 +50,10 @@ localparam DATA_RECEIVED = 1;
 localparam ACCUM_FED = 2;
 localparam CHANNELS_MAPPED = 3;
 localparam channel_bit = `ceilLog2(`INPUT_CHANNELS);
-localparam channel_bit_sub1 `ceilLog2(`INPUT_CHANNELS)-1;
-localparam channel_bit_sub5 `ceilLog2(`INPUT_CHANNELS)-5;
-localparam channel_bit_sub7 `ceilLog2(`INPUT_CHANNELS)-7;
-localparam channel_bit_sub8 `ceilLog2(`INPUT_CHANNELS)-8;
+localparam channel_bit_sub1 = `ceilLog2(`INPUT_CHANNELS)-1;
+localparam channel_bit_sub5 = `ceilLog2(`INPUT_CHANNELS)-5;
+localparam channel_bit_sub7 = `ceilLog2(`INPUT_CHANNELS)-7;
+localparam channel_bit_sub8 = `ceilLog2(`INPUT_CHANNELS)-8;
 
 // FSM and control signals
 reg [1:0] prev_state, next_state;
@@ -178,16 +178,16 @@ assign LastChannel_S = (CycleCntr_SP == `THIRD_MODALITY_CHANNELS-1);
 assign CycleCntr_SN = CycleCntr_SP + 1;
 
 // Want to store channel into second_channel register on either 2nd channel, 34th channel, or 111th channel
-assign store_second = (CycleCntr_SP == {channel_bit_sub1{1'b0},1'b1});
+assign store_second = (CycleCntr_SP == {{channel_bit_sub1{1'b0}},1'b1});
 // Want to XOR and add into accumulation on 32nd channel, 109th channel or 214th channel
-assign xor_mod1_final = (CycleCntr_SP == {channel_bit_sub5{1'b0},5'b11111});
-assign xor_mod2_final = (CycleCntr_SP == {channel_bit_sub7{1'b0},7'b1101100});
-assign xor_mod3_final = (CycleCntr_SP == {channel_bit_sub8{1'b0},8'b11010101});
+assign xor_mod1_final = (CycleCntr_SP == {{channel_bit_sub5{1'b0}},5'b11111});
+assign xor_mod2_final = (CycleCntr_SP == {{channel_bit_sub7{1'b0}},7'b1101100});
+assign xor_mod3_final = (CycleCntr_SP == {{channel_bit_sub8{1'b0}},8'b11010101});
 
 //modalities enabled until final channel for that modality
-assign mod1_run = (CycleCntr_SP <= {`ceilLog2(channel_bit_sub5{1'b0},5'b11111});
-assign mod2_run = (CycleCntr_SP <= {`ceilLog2(channel_bit_sub7{1'b0},7'b1101100});
-assign mod3_run = (CycleCntr_SP <= {`ceilLog2(channel_bit_sub8{1'b0},8'b11010101});
+assign mod1_run = (CycleCntr_SP <= {{channel_bit_sub5{1'b0}},5'b11111});
+assign mod2_run = (CycleCntr_SP <= {{channel_bit_sub7{1'b0}},7'b1101100});
+assign mod3_run = (CycleCntr_SP <= {{channel_bit_sub8{1'b0}},8'b11010101});
 
 //enable each modality's accumulation
 assign AccumulatorEN_mod1_S = AccumulatorEN_S && mod1_run;
