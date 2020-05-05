@@ -38,8 +38,8 @@ module spatial_encoder
 	input [0:`HV_DIMENSION-1] projM_mod1_neg, projM_mod2_neg, projM_mod3_neg, 
 	input [0:`HV_DIMENSION-1] projM_mod1_pos, projM_mod2_pos, projM_mod3_pos,
 	// spatial encoder ready and valid signals, 1 for each modality
-	output spatial_ready_1, spatial_ready_2, spatial_ready_3,
-	output spatial_valid_1, spatial_valid_2, spatial_valid_3,
+	output spatial_ready, spatial_ready_1, spatial_ready_2, spatial_ready_3,
+	output spatial_valid, spatial_valid_1, spatial_valid_2, spatial_valid_3,
 	// use same address for each iM, projM_neg and projM_pos for the corresponding modality
 	output [`ceilLog2(`INPUT_CHANNELS)-1:0] addr_mod1, addr_mod2, addr_mod3
 );
@@ -77,7 +77,7 @@ wire [`CHANNEL_WIDTH-1:0] ChannelFeature_mod1_D, ChannelFeature_mod2_D, ChannelF
 //accumulation of each modality
 wire [0:`HV_DIMENSION-1] HypervectorOut_mod1_DO, HypervectorOut_mod2_DO, HypervectorOut_mod3_DO;
 //keep track of second channel for xor and accumulate when at final channel
-wire xor_mod1_final, xor_mod2_final, xor_mod3_final, store_second;
+wire xor_mod1_final, xor_mod2_final, xor_mod3_final, store_second, AccumulatorEN_S;
 
 //addresses for SRAM w/width of 2000 bits for each modality
 wire [channel_bit_sub1:0] addr_mod1;
@@ -106,9 +106,9 @@ always @(posedge Clk_CI) begin
 end
 
 //keep track of address for each modality
-assign addr_mod1 = cycle_count;
-assign addr_mod2 = cycle_count + `FIRST_MODALITY_CHANNELS;
-assign addr_mod3 = cycle_count + `FIRST_MODALITY_CHANNELS + `SECOND_MODALITY_CHANNELS;
+assign addr_mod1 = CycleCntr_SP;
+assign addr_mod2 = CycleCntr_SP + `FIRST_MODALITY_CHANNELS;
+assign addr_mod3 = CycleCntr_SP + `FIRST_MODALITY_CHANNELS + `SECOND_MODALITY_CHANNELS;
 
 // get current feature value for each modality
 assign ChannelFeature_mod1_D = ChannelsIn_DP[addr_mod1];
@@ -127,7 +127,7 @@ spatial_accumulator Spat_Accum_mod1(
 	.Reset_RI(Reset_RI),
 	.Enable_SI(AccumulatorEN_mod1_S),
 	.xor_final(xor_mod1_final),
-	.store_second(store_second)
+	.store_second(store_second),
 	.FirstHypervector_SI(FirstHypervector_S),
 	.HypervectorIn_DI(IMOut_mod1_D),
 	.projM_negIN(projM_mod1_neg),
@@ -155,7 +155,7 @@ spatial_accumulator Spat_Accum_mod3(
 	.Reset_RI(Reset_RI),
 	.Enable_SI(AccumulatorEN_mod3_S),
 	.xor_final(xor_mod3_final),
-	.store_second(store_second)
+	.store_second(store_second),
 	.FirstHypervector_SI(FirstHypervector_S),
 	.HypervectorIn_DI(IMOut_mod3_D),
 	.projM_negIN(projM_mod3_neg),
@@ -207,7 +207,8 @@ assign spatial_ready_3 = spatial_ready && mod3_run;
 always @(*) begin
 	// default values
 	next_state = IDLE;
-	
+	spatial_valid = 1'b0;
+	spatial_ready = 1'b0;
 	ReadyOut_SO = 1'b0;
 	ValidOut_SO = 1'b0;
 
@@ -227,7 +228,7 @@ always @(*) begin
 		DATA_RECEIVED: begin
 			spatial_valid = 1'b1;
 			spatial_ready = 1'b1;
-			if (mod1_valid && mod2_valid && mod3_valid) begin // wait for SRAM valid signals for modalities that are being used
+			if ((mod1_valid && mod2_valid) && mod3_valid) begin // wait for SRAM valid signals for modalities that are being used
 				AccumulatorEN_S = 1'b1;
 				CycleCntrEN_S = 1'b1;
 				FirstHypervector_S = 1'b1;
@@ -240,12 +241,12 @@ always @(*) begin
 		ACCUM_FED: begin
 			spatial_valid = 1'b1;
 			spatial_ready = 1'b1;
-			if (mod1_valid && mod2_valid && mod3_valid) begin // wait for SRAM valid signals for modalities that are being used
+			if ((mod1_valid && mod2_valid) && mod3_valid) begin // wait for SRAM valid signals for modalities that are being used
 				AccumulatorEN_S = 1'b1;
 				if (LastChannel_S) begin
 					CycleCntrCLR_S  = 1'b1;
-				end else begin
-					//CellAutoEN_S = 1'b1;
+				end
+				else begin
 					CycleCntrEN_S = 1'b1;
 				end
 				next_state = LastChannel_S ? CHANNELS_MAPPED : ACCUM_FED;
