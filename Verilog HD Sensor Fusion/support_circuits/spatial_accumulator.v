@@ -32,6 +32,9 @@ module spatial_accumulator
 
 	//define based on combinatorially defined logic
 	assign XOR_output = bit_by_bit; 
+	localparam sub_2 = `SPATIAL_WIDTH-2;
+	localparam sub_1 = `SPATIAL_WIDTH-1;
+	localparam sub_7 = `SPATIAL_WIDTH-7;
 
 	// accumulate
 	integer i;
@@ -55,12 +58,12 @@ module spatial_accumulator
 			else if (XOR_output[i]) begin
 				if (xor_final) begin
 					if (xor_final_channel[i])
-						Accumulator_DN[i] = Accumulator_DP[i] + {`SPATIAL_WIDTH-2{1'b0},2'b10};
+						Accumulator_DN[i] = Accumulator_DP[i] + {sub_2{1'b0},2'b10};
 					else 
-						Accumulator_DN[i] = Accumulator_DP[i] + {`SPATIAL_WIDTH-1{1'b0},1'b1};
+						Accumulator_DN[i] = Accumulator_DP[i] + {sub_1{1'b0},1'b1};
 				end
 				else begin
-					Accumulator_DN[i] = Accumulator_DP[i] + {`SPATIAL_WIDTH-1{1'b0},1'b1};
+					Accumulator_DN[i] = Accumulator_DP[i] + {sub_1{1'b0},1'b1};
 				end
 			end
 			else
@@ -72,7 +75,7 @@ module spatial_accumulator
 	genvar j;
 	for (j=0; j<`SPATIAL_DIMENSION; j=j+1) begin
 		//if greater than number of channels (217) / 2
-		assign HypervectorOut_DO[j]  = (Accumulator_DP[j] > {`SPATIAL_WIDTH-7{1'b0},7'b1101100}) ? 1'b1 : 1'b0;
+		assign HypervectorOut_DO[j]  = (Accumulator_DP[j] > {sub_7{1'b0},7'b1101100}) ? 1'b1 : 1'b0;
 	end
 
 	// update accumulator reg
