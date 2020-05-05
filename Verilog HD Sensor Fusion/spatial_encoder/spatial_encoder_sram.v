@@ -41,7 +41,9 @@ module spatial_encoder
 	input [0:`HV_DIMENSION-1] IMOut_mod1_D, IMOut_mod2_D, IMOut_mod3_D,
 	input [0:`HV_DIMENSION-1] projM_mod1_neg, projM_mod2_neg, projM_mod3_neg, 
 	input [0:`HV_DIMENSION-1] projM_mod1_pos, projM_mod2_pos, projM_mod3_pos,
-	output spatial_ready, spatial_valid,
+	// spatial encoder ready and valid signals, 1 for each modality
+	output spatial_ready_1, spatial_ready_2, spatial_ready_3,
+	output spatial_valid_1, spatial_valid_2, spatial_valid_3,
 	// use same address for each iM, projM_neg and projM_pos for the corresponding modality
 	output [`ceilLog2(`INPUT_CHANNELS)-1:0] addr_mod1, addr_mod2, addr_mod3
 );
@@ -57,6 +59,8 @@ reg [1:0] prev_state, next_state;
 reg InputBuffersEN_S, AccumulatorEN_mod1_S, AccumulatorEN_mod2_S, AccumulatorEN_mod3_S, CellAutoEN_S, CellAutoCLR_S, CycleCntrEN_S, CycleCntrCLR_S;
 reg FirstHypervector_S;
 wire LastChannel_S;
+wire sram_mod1_valid, sram_mod2_valid, sram_mod3_valid;
+reg mod1_valid, mod2_valid, mod3_valid;
 
 // Cycle (channel) counter
 reg [`ceilLog2(`INPUT_CHANNELS)-1:0] CycleCntr_SP;
@@ -78,9 +82,9 @@ wire [`CHANNEL_WIDTH-1:0] ChannelFeature_mod1_D, ChannelFeature_mod2_D, ChannelF
 wire [0:`HV_DIMENSION-1] HypervectorOut_mod1_DO, HypervectorOut_mod2_DO, HypervectorOut_mod3_DO;
 wire xor_mod1_final, xor_mod2_final, xor_mod3_final, store_second;
 
-wire [`ceilLog2(`INPUT_CHANNELS)-1:0] channel_mod1;
-wire [`ceilLog2(`INPUT_CHANNELS)-1:0] channel_mod2;
-wire [`ceilLog2(`INPUT_CHANNELS)-1:0] channel_mod3;
+wire [`ceilLog2(`INPUT_CHANNELS)-1:0] addr_mod1;
+wire [`ceilLog2(`INPUT_CHANNELS)-1:0] addr_mod2;
+wire [`ceilLog2(`INPUT_CHANNELS)-1:0] addr_mod3;
 
 // DATAPATH
 
@@ -116,9 +120,14 @@ assign addr_mod2 = cycle_count + `FIRST_MODALITY_CHANNELS;
 assign addr_mod3 = cycle_count + `FIRST_MODALITY_CHANNELS + `SECOND_MODALITY_CHANNELS;
 
 // get current feature value
-assign ChannelFeature_mod1_D = ChannelsIn_DP[channel_mod1];
-assign ChannelFeature_mod2_D = ChannelsIn_DP[channel_mod2];
-assign ChannelFeature_mod3_D = ChannelsIn_DP[channel_mod3];
+assign ChannelFeature_mod1_D = ChannelsIn_DP[addr_mod1];
+assign ChannelFeature_mod2_D = ChannelsIn_DP[addr_mod2];
+assign ChannelFeature_mod3_D = ChannelsIn_DP[addr_mod3];
+
+assign sram_mod1_valid = sram1_valid && sram2_valid && sram3_valid;
+assign sram_mod2_valid = sram4_valid && sram5_valid && sram6_valid;
+assign sram_mod3_valid = sram7_valid && sram8_valid && sram9_valid;
+
 
 // cellular automaton
 //cellular_automaton Cell_Auto(
@@ -227,6 +236,15 @@ assign AccumulatorEN_mod1_S = AccumulatorEN_S && mod1_run;
 assign AccumulatorEN_mod2_S = AccumulatorEN_S && mod2_run;
 assign AccumulatorEN_mod2_S = AccumulatorEN_S && mod3_run;
 
+//set valid and ready for specific modalities
+assign spatial_valid_1 = spatial_valid && mod1_run;
+assign spatial_valid_2 = spatial_valid && mod2_run;
+assign spatial_valid_3 = spatial_valid && mod3_run;
+assign spatial_ready_1 = spatial_ready && mod1_run;
+assign spatial_ready_2 = spatial_ready && mod2_run;
+assign spatial_ready_3 = spatial_ready && mod3_run;
+
+
 // FSM
 always @(*) begin
 	// default values
@@ -251,25 +269,35 @@ always @(*) begin
 			InputBuffersEN_S = ValidIn_SI ? 1'b1 : 1'b0;
 		end
 		DATA_RECEIVED: begin
-			next_state = ACCUM_FED;
 			spatial_valid = 1'b1;
 			spatial_ready = 1'b1;
-			if (mod1_run && mod2_run && mod3_run)
-
-			AccumulatorEN_S = 1'b1;
-			CellAutoEN_S = 1'b1;
-			CycleCntrEN_S = 1'b1;
-			FirstHypervector_S = 1'b1;
-		end
-		ACCUM_FED: begin
-			next_state = LastChannel_S ? CHANNELS_MAPPED : ACCUM_FED;
-			AccumulatorEN_S = 1'b1;
-			if (LastChannel_S) begin
-				CellAutoCLR_S = 1'b1;
-				CycleCntrCLR_S  = 1'b1;
-			end else begin
+			if (mod1_valid && mod2_valid && mod3_valid) begin
+				AccumulatorEN_S = 1'b1;
 				CellAutoEN_S = 1'b1;
 				CycleCntrEN_S = 1'b1;
+				FirstHypervector_S = 1'b1;
+				next_state = ACCUM_FED;
+			end
+			else begin
+				next_state = DATA_RECEIVED
+			end
+		end
+		ACCUM_FED: begin
+			spatial_valid = 1'b1;
+			spatial_ready = 1'b1;
+			if (mod1_valid && mod2_valid && mod3_valid) begin
+				AccumulatorEN_S = 1'b1;
+				if (LastChannel_S) begin
+					CellAutoCLR_S = 1'b1;
+					CycleCntrCLR_S  = 1'b1;
+				end else begin
+					CellAutoEN_S = 1'b1;
+					CycleCntrEN_S = 1'b1;
+				end
+				next_state = LastChannel_S ? CHANNELS_MAPPED : ACCUM_FED;
+			end
+			else begin
+				next_state = ACCUM_FED;
 			end
 		end
 		CHANNELS_MAPPED: begin
@@ -278,6 +306,38 @@ always @(*) begin
 		end
 		default: ;
 	endcase // prev_state
+end
+
+//for sram, if the sram is valid and the modality is used, then valid, if the modality is used and sram is not valid, then not valid, if modality is not used, just go ahead, valid
+always @ (*) begin
+	if (mod1_run) begin
+		if (sram_mod1_valid)
+			mod1_valid = 1'b1;
+		else
+			mod1_valid = 1'b0;
+	end
+	else
+		mod1_valid = 1'b1;
+end
+always @ (*) begin
+	if (mod2_run) begin
+		if (sram_mod2_valid)
+			mod2_valid = 1'b1;
+		else
+			mod2_valid = 1'b0;
+	end
+	else
+		mod2_valid = 1'b1;
+end
+always @ (*) begin
+	if (mod3_run) begin
+		if (sram_mod3_valid)
+			mod3_valid = 1'b1;
+		else
+			mod3_valid = 1'b0;
+	end
+	else
+		mod3_valid = 1'b1;
 end
 
 // FSM state transitions

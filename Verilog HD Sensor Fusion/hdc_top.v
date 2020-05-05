@@ -19,7 +19,22 @@ module hdc_top
 	// outputs
 	output [`LABEL_WIDTH-1:0] LabelOut_DO,
 	output [`DISTANCE_WIDTH-1:0] DistanceOut_DO,
-    output [1023:0] Gest_Raw_Out
+    output [1023:0] Gest_Raw_Out,
+    input sram1_ready, sram1_valid,
+	input sram2_ready, sram2_valid,
+	input sram3_ready, sram3_valid,
+	input sram4_ready, sram4_valid,
+	input sram5_ready, sram5_valid, 
+	input sram6_ready, sram6_valid,
+	input sram7_ready, sram7_valid,
+	input sram8_ready, sram8_valid,
+	input sram9_ready, sram9_valid,
+	input [0:`HV_DIMENSION-1] IMOut_mod1_D, IMOut_mod2_D, IMOut_mod3_D,
+	input [0:`HV_DIMENSION-1] projM_mod1_neg, projM_mod2_neg, projM_mod3_neg, 
+	input [0:`HV_DIMENSION-1] projM_mod1_pos, projM_mod2_pos, projM_mod3_pos,
+	output spatial_ready_1, spatial_ready_2, spatial_ready_3, spatial_valid_1, spatial_valid_2, spatial_valid_3,
+	// use same address for each iM, projM_neg and projM_pos for the corresponding modality
+	output [`ceilLog2(`INPUT_CHANNELS)-1:0] addr_mod1, addr_mod2, addr_mod3
 );
 
 // feature -> spatial
@@ -103,7 +118,43 @@ spatial_encoder spatial_encoder_mod1(
 
 	.ModeOut_SO       (Mode_ST),
 	.LabelOut_DO      (Label_ST),
-	.HypervectorOut_DO(Hypervector_ST)
+	.HypervectorOut_DO(Hypervector_ST),
+	.sram1_ready(sram1_ready),
+	.sram1_valid(sram1_valid),
+	.sram2_ready(sram2_ready), 
+	.sram2_valid(sram2_valid),
+	.sram3_ready(sram3_ready,
+	.sram3_valid(sram3_valid,
+	.sram4_ready(sram4_ready),
+	.sram4_valid(sram4_valid),
+	.sram5_ready(sram5_ready),
+	.sram5_valid(sram5_valid), 
+	.sram6_ready(sram6_ready), 
+	.sram6_valid(sram6_valid),
+	.sram7_ready(sram7_ready), 
+	.sram7_valid(sram7_valid),
+	.sram8_ready(sram8_ready),
+	.sram8_valid(sram8_valid),
+	.sram9_ready(sram9_ready),
+	.sram9_valid(sram9_valid),
+	.IMOut_mod1_D(IMOut_mod1_D),
+	.IMOut_mod2_D(IMOut_mod2_D),
+	.IMOut_mod3_D(IMOut_mod3_D),
+	.projM_mod1_neg(projM_mod1_neg), 
+	.projM_mod2_neg(projM_mod2_neg), 
+	.projM_mod3_neg(projM_mod3_neg), 
+	.projM_mod1_pos(projM_mod1_pos), 
+	.projM_mod2_pos(projM_mod2_pos), 
+	.projM_mod3_pos(projM_mod3_pos),
+	.spatial_ready_1(spatial_ready_1),
+	.spatial_ready_2(spatial_ready_2),
+	.spatial_ready_3(spatial_ready_3),
+	.spatial_valid_1(spatial_valid_1),
+	.spatial_valid_2(spatial_valid_2),
+	.spatial_valid_3(spatial_valid_3),
+	.addr_mod1(addr_mod1), 
+	.addr_mod2(addr_mod2), 
+	.addr_mod3(addr_mod3)
 	);
 
 
