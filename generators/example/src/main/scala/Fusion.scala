@@ -36,14 +36,11 @@ class FusionIO(val c: FusionParams) extends Bundle {
   val ReadyOut_SO, ValidOut_SO = Output(Bool())
 
   // inputs
-  val ModeIn_SI = Input(UInt(c.modeWidth.W))
-  val LabelIn_DI = Input(UInt(c.labelWidth.W))
   val Raw_DI = Input(UInt((c.channelWidth*c.inputChannels).W))
 
   // outputs
-  val LabelOut_DO = Output(UInt(c.labelWidth.W))
-  val DistanceOut_DO = Output(UInt(c.distanceWidth.W))
-  val Gest_Raw_Out = Output(UInt(1024.W))
+  val LabelOut_A_DO, LabelOut_V_DO = Output(UInt(c.labelWidth.W))
+  val DistanceOut_A_DO, DistanceOut_V_DO = Output(UInt(c.distanceWidth.W))
 
   // memory
   val sram1_ready, sram1_valid, sram2_ready, sram2_valid, sram3_ready, sram3_valid, sram4_ready, sram4_valid, sram5_ready, sram5_valid, sram6_ready, sram6_valid, sram7_ready, sram7_valid, sram8_ready, sram8_valid, sram9_ready, sram9_valid = Input(Bool())
@@ -56,10 +53,9 @@ trait FusionTopIO extends Bundle {
   def params: FusionParams
   def c = params
 
-  val labelIn = Input(UInt(c.labelWidth.W))
   val dataIn = Input(UInt((c.channelWidth*c.inputChannels).W))
-  val labelOut = Output(UInt(c.labelWidth.W))
-  val distOut = Output(UInt(c.distanceWidth.W))
+  val labelOutA, labelOutV = Output(UInt(c.labelWidth.W))
+  val distOutA, distOutV = Output(UInt(c.distanceWidth.W))
   val fusion_busy = Output(Bool())
 }
 
@@ -104,7 +100,6 @@ trait FusionModule extends HasRegMap {
   val reset: Reset
 
   // How many clock cycles in a PWM cycle?
-  val mode = Wire(UInt(c.modeWidth.W))
   val status = Wire(UInt(8.W))
 
   val impl = Module(new FusionMMIOBlackBox(c))
@@ -128,12 +123,10 @@ trait FusionModule extends HasRegMap {
 
   state match {
     case idle => {
-      mode := 2.U // invalid
       memWR := memR_all
       state := load_mems
     }
     case load_mems => {
-      mode := 2.U // invalid
       // TODO: memory loading sequence from training
       when(memCnt < c.channelsGSR.U) {
         memWR := memW_GSR
@@ -151,12 +144,10 @@ trait FusionModule extends HasRegMap {
       memCnt := memCnt + 1.U
     }
     case predict => {
-      mode := 0.U
       memWR := memR_all
       state := predict
     }
     case _ => {
-      mode := 2.U
       memWR := memR_all
       state := idle
     }
@@ -185,17 +176,17 @@ trait FusionModule extends HasRegMap {
   impl.io.Reset_RI := reset.asBool
 
   // state machine stuff
-  impl.io.ModeIn_SI := mode
   impl.io.ValidIn_SI := state === predict
   impl.io.ReadyIn_SI := state === predict
   Seq(impl.io.sram1_ready, impl.io.sram1_valid, impl.io.sram2_ready, impl.io.sram2_valid, impl.io.sram3_ready, impl.io.sram3_valid, impl.io.sram4_ready, impl.io.sram4_valid, impl.io.sram5_ready, impl.io.sram5_valid, impl.io.sram6_ready, impl.io.sram6_valid, impl.io.sram7_ready, impl.io.sram7_valid, impl.io.sram8_ready, impl.io.sram8_valid, impl.io.sram9_ready, impl.io.sram9_valid).foreach{rv => rv := state === predict}
   status := Cat(Seq(impl.io.ReadyOut_SO, impl.io.ValidOut_SO, impl.io.spatial_ready_1, impl.io.spatial_ready_2, impl.io.spatial_ready_3, impl.io.spatial_valid_1, impl.io.spatial_valid_2, impl.io.spatial_valid_3))
 
   // connect labels & data
-  impl.io.LabelIn_DI := io.labelIn
-  io.labelOut := impl.io.LabelOut_DO
   impl.io.Raw_DI := io.dataIn
-  io.distOut := impl.io.DistanceOut_DO
+  io.labelOutA := impl.io.LabelOut_A_DO
+  io.labelOutV := impl.io.LabelOut_A_DO
+  io.distOutA := impl.io.DistanceOut_A_DO
+  io.distOutV := impl.io.DistanceOut_V_DO
 
   impl.io.projM_mod1_pos := projM_pos_GSR.out
   impl.io.projM_mod1_neg := projM_neg_GSR.out
@@ -214,14 +205,12 @@ trait FusionModule extends HasRegMap {
     0x00 -> Seq(
       RegField.r(8, status)), // a read-only register capturing current status
     0x04 -> Seq(
-      RegField.w(c.modeWidth, mode)),
-    0x08 -> Seq(
       RegField.r(1, memWR)),
-    0x0C -> Seq(
+    0x08 -> Seq(
       RegField.w(32, projM_pos_data)),
-    0x10 -> Seq(
+    0x0C -> Seq(
       RegField.w(32, projM_neg_data)),
-    0x14 -> Seq(
+    0x10 -> Seq(
       RegField.w(32, iM_data)),
   )
 }
