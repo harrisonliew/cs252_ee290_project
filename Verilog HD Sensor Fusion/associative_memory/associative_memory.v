@@ -109,10 +109,10 @@ end
 //assign shift_end = (ShiftCntr_SP-1)*`HV_DIMENSION+`HV_DIMENSION-1;
 
 assign AM_A_class0 = AM_A[0:`HV_DIMENSION-1];
-assign AM_A_class1 = AM_A[`HV_DIMENSION:`HV_DIMENSION+`HV_DIMENSION-1]
+assign AM_A_class1 = AM_A[`HV_DIMENSION:`HV_DIMENSION+`HV_DIMENSION-1];
 
 assign AM_V_class0 = AM_V[0:`HV_DIMENSION-1];
-assign AM_V_class1 = AM_V[`HV_DIMENSION:`HV_DIMENSION+`HV_DIMENSION-1]
+assign AM_V_class1 = AM_V[`HV_DIMENSION:`HV_DIMENSION+`HV_DIMENSION-1];
 //A
 //Set next class
 assign AM_A_class_N = next_A_class;
