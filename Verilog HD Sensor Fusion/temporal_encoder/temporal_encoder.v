@@ -87,10 +87,10 @@ end
 
 //buffer output
 always @ (posedge Clk_CI) begin
-  if Reset_RI == 1'b1) begin
+  if (Reset_RI == 1'b1) begin
     result_P = {`HV_DIMENSION{1'b0}};
   end
-  else if (NGramEN_S == 1'b1) egin
+  else if (NGramEN_S == 1'b1) begin
     result_P = result_N;
   end
 end
@@ -99,7 +99,8 @@ end
 always @ (posedge Clk_CI) begin
   if (Reset_RI == 1'b1) begin
     FSM_SP <= idle;
-  end else begin
+  end 
+  else begin
     FSM_SP <= FSM_SN;
   end
 end
