@@ -1,6 +1,6 @@
 `include "const.vh"
 
-module hdc_top
+module hdc_top_late
 (
 	// global ports
 	input Clk_CI, Reset_RI, 
@@ -33,11 +33,11 @@ module hdc_top
 
 // spatial -> temporal
 wire Ready_ST, Valid_ST;
-wire [0:`HV_DIMENSION-1] Hypervector_modST;
+wire [0:`HV_DIMENSION-1] Hypervector_mod1_ST, Hypervector_mod2_ST, Hypervector_mod3_ST;
 
 // temporal -> AM
 wire Ready_TA, Valid_TA;
-wire [0:`HV_DIMENSION-1] Hypervector_TA;
+wire [0:`HV_DIMENSION-1] Hypervector_mod1_TA, Hypervector_mod2_TA, Hypervector_mod3_TA;
 
 //AM -> output
 reg [`LABEL_WIDTH-1:0] LabelOut;
@@ -58,7 +58,7 @@ reg [`DISTANCE_WIDTH-1:0] DistanceOut;
 //    end
 //end
 
-spatial_encoder_sram spatial_encoder_mod1(
+spatial_encoder_sram_late spatial_encoder_mod1(
 	.Clk_CI           (Clk_CI),
 	.Reset_RI         (~Reset_RI),
 
@@ -70,7 +70,9 @@ spatial_encoder_sram spatial_encoder_mod1(
 
 	.ChannelsInput_DI    (Raw_DI),
 
-	.HypervectorOut_DO(Hypervector_ST),
+	.HypervectorOut_mod1_DO(Hypervector_mod1_ST),
+	.HypervectorOut_mod2_DO(Hypervector_mod2_ST),
+	.HypervectorOut_mod3_DO(Hypervector_mod3_ST),
 
 	.sram1_ready(sram1_ready),
 	.sram1_valid(sram1_valid),
@@ -111,7 +113,7 @@ spatial_encoder_sram spatial_encoder_mod1(
 	);
 
 
-temporal_encoder temporal_encoder(
+temporal_encoder temporal_encoder_mod1(
 	.Clk_CI           (Clk_CI),
 	.Reset_RI         (~Reset_RI),
 
@@ -121,12 +123,42 @@ temporal_encoder temporal_encoder(
 	.ValidOut_SO      (Valid_TA),
 	.ReadyIn_SI       (Ready_TA),
 
-	.HypervectorIn_DI (Hypervector_ST),
+	.HypervectorIn_DI (Hypervector_mod1_ST),
 
-	.HypervectorOut_DO(Hypervector_TA)
+	.HypervectorOut_DO(Hypervector_mod1_TA)
 	);
 
-associative_memory associative_memory(
+temporal_encoder temporal_encoder_mod2(
+	.Clk_CI           (Clk_CI),
+	.Reset_RI         (~Reset_RI),
+
+	.ValidIn_SI    	  (Valid_ST),
+	.ReadyOut_SO   	  (Ready_ST),
+
+	.ValidOut_SO      (Valid_TA),
+	.ReadyIn_SI       (Ready_TA),
+
+	.HypervectorIn_DI (Hypervector_mod2_ST),
+
+	.HypervectorOut_DO(Hypervector_mod2_TA)
+	);
+
+temporal_encoder temporal_encoder_mod3(
+	.Clk_CI           (Clk_CI),
+	.Reset_RI         (~Reset_RI),
+
+	.ValidIn_SI    	  (Valid_ST),
+	.ReadyOut_SO   	  (Ready_ST),
+
+	.ValidOut_SO      (Valid_TA),
+	.ReadyIn_SI       (Ready_TA),
+
+	.HypervectorIn_DI (Hypervector_mod3_ST),
+
+	.HypervectorOut_DO(Hypervector_mod3_TA)
+	);
+
+associative_memory_late associative_memory(
 	.Clk_CI          (Clk_CI),
 	.Reset_RI        (~Reset_RI),
 
@@ -136,7 +168,9 @@ associative_memory associative_memory(
 	.ValidOut_SO     (ValidOut_SO),
 	.ReadyIn_SI      (ReadyIn_SI),
 
-	.HypervectorIn_DI(Hypervector_TA),
+	.HypervectorIn_mod1_DI(Hypervector_mod1_TA),
+	.HypervectorIn_mod2_DI(Hypervector_mod2_TA),
+	.HypervectorIn_mod3_DI(Hypervector_mod3_TA),
 
 	.LabelOut_A_DO     (LabelOut_A_DO),
 	.DistanceOut_A_DO  (DistanceOut_A_DO),
