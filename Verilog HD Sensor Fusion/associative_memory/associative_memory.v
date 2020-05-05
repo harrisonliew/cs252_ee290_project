@@ -47,9 +47,10 @@ reg [1:0] prev_state, next_state;
 localparam IDLE = 2'd0;
 localparam FIND_MIN_DIST = 2'd1;
 localparam OUTPUT_STABLE = 2'd2;
+localparam classes_p1 = `CLASSES+1;
+localparam SHIFT_CNTR_WIDTH = `ceilLog2(classes_p1);
 
 // shift counter
-localparam SHIFT_CNTR_WIDTH = `ceilLog2(`CLASSES+1);
 reg [SHIFT_CNTR_WIDTH-1:0] ShiftCntr_SP; 
 wire [SHIFT_CNTR_WIDTH-1:0] ShiftCntr_SN;
 
