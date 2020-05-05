@@ -137,8 +137,8 @@ end
 integer y;
 always @(*) begin
 	AdderOut_V_D = {`DISTANCE_WIDTH{1'b0}};
-	for (y=0; y<`HV_DIMENSION; j=j+1) begin
-		AdderOut_V_D = AdderOut_V_D + SimilarityOut_V_D[j];
+	for (y=0; y<`HV_DIMENSION; y=y+1) begin
+		AdderOut_V_D = AdderOut_V_D + SimilarityOut_V_D[y];
 	end
 end
 
