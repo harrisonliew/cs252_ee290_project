@@ -18,14 +18,14 @@ module temporal_encoder
 reg [0:`HV_DIMENSION-1] NGram_DP [1:`NGRAM_SIZE-1]; 
 wire [0:`HV_DIMENSION-1] NGram_DN [1:`NGRAM_SIZE-1];
 reg [1:0] FSM_SP, FSM_SN;
-reg [0 : `HV_DIMENSION-1] result;
+reg [0 : `HV_DIMENSION-1] result_N, result_P;
 reg NGramEN_S;
 
 localparam 
   idle = 2'd0,
   forward_training = 2'd1,
   accept_input = 2'd2,
-  forward_query = 2'd3,
+  forward_query = 2'd3;
 
 integer i, sum;
 genvar y;
