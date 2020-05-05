@@ -26,7 +26,7 @@ module hdc_top
 	input [0:`HV_DIMENSION-1] projM_mod1_neg, projM_mod2_neg, projM_mod3_neg, 
 	input [0:`HV_DIMENSION-1] projM_mod1_pos, projM_mod2_pos, projM_mod3_pos,
 	output spatial_ready_1, spatial_ready_2, spatial_ready_3, spatial_valid_1, spatial_valid_2, spatial_valid_3,
-	output [`ceilLog2(`INPUT_CHANNELS)-1:0] addr_mod1, addr_mod2, addr_mod3
+	output [`ceilLog2(`INPUT_CHANNELS)-1:0] addr_mod1, addr_mod2, addr_mod3,
 	output [`LABEL_WIDTH-1:0] LabelOut_A_DO, LabelOut_V_DO,
 	output [`DISTANCE_WIDTH-1:0] DistanceOut_A_DO, DistanceOut_V_DO,
 );
@@ -75,8 +75,8 @@ spatial_encoder_sram spatial_encoder_mod1(
 	.sram1_valid(sram1_valid),
 	.sram2_ready(sram2_ready), 
 	.sram2_valid(sram2_valid),
-	.sram3_ready(sram3_ready,
-	.sram3_valid(sram3_valid,
+	.sram3_ready(sram3_ready),
+	.sram3_valid(sram3_valid),
 	.sram4_ready(sram4_ready),
 	.sram4_valid(sram4_valid),
 	.sram5_ready(sram5_ready),

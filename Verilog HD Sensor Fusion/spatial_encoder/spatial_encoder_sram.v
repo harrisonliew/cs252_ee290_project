@@ -57,7 +57,8 @@ localparam channel_bit_sub8 = `ceilLog2(`INPUT_CHANNELS)-8;
 
 // FSM and control signals
 reg [1:0] prev_state, next_state;
-reg InputBuffersEN_S, AccumulatorEN_mod1_S, AccumulatorEN_mod2_S, AccumulatorEN_mod3_S, CycleCntrEN_S, CycleCntrCLR_S, AccumulatorEN_S;
+reg InputBuffersEN_S, CycleCntrEN_S, CycleCntrCLR_S, AccumulatorEN_S;
+wire AccumulatorEN_mod1_S, AccumulatorEN_mod2_S, AccumulatorEN_mod3_S;
 reg FirstHypervector_S;
 wire LastChannel_S;
 wire sram_mod1_valid, sram_mod2_valid, sram_mod3_valid;
