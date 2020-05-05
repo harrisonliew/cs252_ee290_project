@@ -1,0 +1,288 @@
+#!/usr/bin/env python3
+import os
+
+import hammer_vlsi
+from hammer_vlsi import CLIDriver, HammerToolHookAction, MMMCCornerType
+import hammer_tech
+
+from typing import Dict, Callable, Optional, List
+
+def fusion_generate_mmmc_script(x: hammer_vlsi.HammerTool) -> str:
+    """
+    Output for the mmmc.tcl script.
+    Innovus (init_design) requires that the timing script be placed in a separate file.
+
+    :return: Contents of the mmmc script.
+    """
+    mmmc_output = []  # type: List[str]
+
+    def append_mmmc(cmd: str) -> None:
+        x.verbose_tcl_append(cmd, mmmc_output)
+
+    # Create an Innovus constraint mode.
+    constraint_mode = "my_constraint_mode"
+    sdc_files = []  # type: List[str]
+
+    # Generate constraints
+    clock_constraints_fragment = os.path.join(x.run_dir, "clock_constraints_fragment.sdc")
+    with open(clock_constraints_fragment, "w") as f:
+        f.write(x.sdc_clock_constraints)
+    sdc_files.append(clock_constraints_fragment)
+
+    # Generate port constraints.
+    pin_constraints_fragment = os.path.join(x.run_dir, "pin_constraints_fragment.sdc")
+    with open(pin_constraints_fragment, "w") as f:
+        f.write(x.sdc_pin_constraints)
+    sdc_files.append(pin_constraints_fragment)
+
+    # Add the post-synthesis SDC, if present.
+    post_synth_sdc = x.post_synth_sdc
+    if post_synth_sdc is not None:
+        sdc_files.append(post_synth_sdc)
+
+    # TODO: add floorplanning SDC
+    if len(sdc_files) > 0:
+        sdc_files_arg = "-sdc_files [list {sdc_files}]".format(
+            sdc_files=" ".join(sdc_files)
+        )
+    else:
+        blank_sdc = os.path.join(x.run_dir, "blank.sdc")
+        x.run_executable(["touch", blank_sdc])
+        sdc_files_arg = "-sdc_files {{ {} }}".format(blank_sdc)
+    append_mmmc("create_constraint_mode -name {name} {sdc_files_arg}".format(
+        name=constraint_mode,
+        sdc_files_arg=sdc_files_arg
+    ))
+
+    corners = x.get_mmmc_corners()  # type: List[MMMCCorner]
+    # In parallel, create the delay corners
+    if corners:
+        setup_corner = corners[0]  # type: MMMCCorner
+        hold_corner = corners[0]  # type: MMMCCorner
+        pwr_corner = corners[0]  # type: MMMCCorner
+        # TODO(colins): handle more than one corner and do something with extra corners
+        for corner in corners:
+            if corner.type is MMMCCornerType.Setup:
+                setup_corner = corner
+            if corner.type is MMMCCornerType.Hold:
+                hold_corner = corner
+            if corner.type is MMMCCornerType.Extra:
+                pwr_corner = corner
+
+        # First, create Innovus library sets
+        append_mmmc("create_library_set -name {name} -timing [list {list}]".format(
+            name="{n}.setup_set".format(n=setup_corner.name),
+            list=x.get_timing_libs(setup_corner)
+        ))
+        append_mmmc("create_library_set -name {name} -timing [list {list}]".format(
+            name="{n}.hold_set".format(n=hold_corner.name),
+            list=x.get_timing_libs(hold_corner)
+        ))
+        append_mmmc("create_library_set -name {name} -timing [list {list}]".format(
+            name="{n}.pwr_set".format(n=pwr_corner.name),
+            list=x.get_timing_libs(pwr_corner)
+        ))
+        # Skip opconds for now
+        # Next, create Innovus timing conditions
+        append_mmmc("create_timing_condition -name {name} -library_sets [list {list}]".format(
+            name="{n}.setup_cond".format(n=setup_corner.name),
+            list="{n}.setup_set".format(n=setup_corner.name)
+        ))
+        append_mmmc("create_timing_condition -name {name} -library_sets [list {list}]".format(
+            name="{n}.hold_cond".format(n=hold_corner.name),
+            list="{n}.hold_set".format(n=hold_corner.name)
+        ))
+        append_mmmc("create_timing_condition -name {name} -library_sets [list {list}]".format(
+            name="{n}.pwr_cond".format(n=pwr_corner.name),
+            list="{n}.pwr_set".format(n=pwr_corner.name)
+        ))
+        # Next, create Innovus rc corners from qrc tech files
+        append_mmmc("create_rc_corner -name {name} -temperature {tempInCelsius} {qrc}".format(
+            name="{n}.setup_rc".format(n=setup_corner.name),
+            tempInCelsius=str(setup_corner.temp.value),
+            qrc="-qrc_tech {}".format(x.get_mmmc_qrc(setup_corner)) if x.get_mmmc_qrc(setup_corner) != '' else ''
+        ))
+        append_mmmc("create_rc_corner -name {name} -temperature {tempInCelsius} {qrc}".format(
+            name="{n}.hold_rc".format(n=hold_corner.name),
+            tempInCelsius=str(hold_corner.temp.value),
+            qrc="-qrc_tech {}".format(x.get_mmmc_qrc(hold_corner)) if x.get_mmmc_qrc(hold_corner) != '' else ''
+        ))
+        append_mmmc("create_rc_corner -name {name} -temperature {tempInCelsius} {qrc}".format(
+            name="{n}.pwr_rc".format(n=pwr_corner.name),
+            tempInCelsius=str(pwr_corner.temp.value),
+            qrc="-qrc_tech {}".format(x.get_mmmc_qrc(pwr_corner)) if x.get_mmmc_qrc(pwr_corner) != '' else ''
+        ))
+        # Next, create an Innovus delay corner.
+        append_mmmc(
+            "create_delay_corner -name {name}_delay -timing_condition {name}_cond -rc_corner {name}_rc".format(
+                name="{n}.setup".format(n=setup_corner.name)
+            ))
+        append_mmmc(
+            "create_delay_corner -name {name}_delay -timing_condition {name}_cond -rc_corner {name}_rc".format(
+                name="{n}.hold".format(n=hold_corner.name)
+            ))
+        append_mmmc(
+            "create_delay_corner -name {name}_delay -timing_condition {name}_cond -rc_corner {name}_rc".format(
+                name="{n}.pwr".format(n=pwr_corner.name)
+            ))
+        # Next, create the analysis views
+        append_mmmc("create_analysis_view -name {name}_view -delay_corner {name}_delay -constraint_mode {constraint}".format(
+            name="{n}.setup".format(n=setup_corner.name), constraint=constraint_mode))
+        append_mmmc("create_analysis_view -name {name}_view -delay_corner {name}_delay -constraint_mode {constraint}".format(
+            name="{n}.hold".format(n=hold_corner.name), constraint=constraint_mode))
+        append_mmmc("create_analysis_view -name {name}_view -delay_corner {name}_delay -constraint_mode {constraint}".format(
+            name="{n}.pwr".format(n=pwr_corner.name), constraint=constraint_mode))
+        # Finally, apply the analysis view.
+        append_mmmc("set_analysis_view -setup {{ {setup_view} }} -hold {{ {hold_view} }} -leakage {{ {pwr_view} }} -dynamic {{ {pwr_view} }}".format(
+            setup_view="{n}.setup_view".format(n=setup_corner.name),
+            hold_view="{n}.hold_view".format(n=hold_corner.name),
+            pwr_view="{n}.pwr_view".format(n=pwr_corner.name)
+        ))
+    else:
+        # First, create an Innovus library set.
+        library_set_name = "my_lib_set"
+        append_mmmc("create_library_set -name {name} -timing [list {list}]".format(
+            name=library_set_name,
+            list=x.get_timing_libs()
+        ))
+        # Next, create an Innovus timing condition.
+        timing_condition_name = "my_timing_condition"
+        append_mmmc("create_timing_condition -name {name} -library_sets [list {list}]".format(
+            name=timing_condition_name,
+            list=library_set_name
+        ))
+        # extra junk: -opcond ...
+        rc_corner_name = "rc_cond"
+        append_mmmc("create_rc_corner -name {name} -temperature {tempInCelsius} {qrc}".format(
+            name=rc_corner_name,
+            tempInCelsius=120,  # TODO: this should come from tech config
+            qrc="-qrc_tech {}".format(x.get_qrc_tech()) if x.get_qrc_tech() != '' else ''
+        ))
+        # Next, create an Innovus delay corner.
+        delay_corner_name = "my_delay_corner"
+        append_mmmc(
+            "create_delay_corner -name {name} -timing_condition {timing_cond} -rc_corner {rc}".format(
+                name=delay_corner_name,
+                timing_cond=timing_condition_name,
+                rc=rc_corner_name
+            ))
+        # extra junk: -rc_corner my_rc_corner_maybe_worst
+        # Next, create an Innovus analysis view.
+        analysis_view_name = "my_view"
+        append_mmmc("create_analysis_view -name {name} -delay_corner {corner} -constraint_mode {constraint}".format(
+            name=analysis_view_name, corner=delay_corner_name, constraint=constraint_mode))
+        # Finally, apply the analysis view.
+        # TODO: introduce different views of setup/hold and true multi-corner
+        append_mmmc("set_analysis_view -setup {{ {setup_view} }} -hold {{ {hold_view} }}".format(
+            setup_view=analysis_view_name,
+            hold_view=analysis_view_name
+        ))
+
+    return "\n".join(mmmc_output)
+
+def fusion_init_environment(x: hammer_vlsi.HammerTool) -> bool:
+    # replace genus default
+    # also have a way to use TT corner for power analysis
+
+    # Python sucks here for verbosity
+    verbose_append = x.verbose_append
+
+    verbose_append('''
+        # let it unroll up to hypervectors size
+        set_db hdl_max_loop_limit 10000
+    ''', clean=True)
+
+    # Clock gating setup
+    if x.get_setting("synthesis.clock_gating_mode") == "auto":
+        verbose_append("set_db lp_clock_gating_infer_enable  true")
+        # Innovus will create instances named CLKGATE_foo, CLKGATE_bar, etc.
+        verbose_append("set_db lp_clock_gating_prefix  {CLKGATE}")
+        verbose_append("set_db lp_insert_clock_gating  true")
+        verbose_append("set_db lp_clock_gating_hierarchical true")
+        verbose_append("set_db lp_insert_clock_gating_incremental true")
+        verbose_append("set_db lp_clock_gating_register_aware true")
+
+    # Set up libraries.
+    # Read timing libraries.
+    mmmc_path = os.path.join(x.run_dir, "mmmc.tcl")
+    with open(mmmc_path, "w") as f:
+        f.write(fusion_generate_mmmc_script(x))
+    verbose_append("read_mmmc {mmmc_path}".format(mmmc_path=mmmc_path))
+
+    if x.hierarchical_mode.is_nonleaf_hierarchical():
+        # Read ILMs.
+        for ilm in x.get_input_ilms():
+            # Assumes that the ILM was created by Innovus (or at least the file/folder structure).
+            verbose_append("read_ilm -basename {data_dir}/{module}_postRoute -module_name {module}".format(
+                data_dir=ilm.data_dir, module=ilm.module))
+
+    # Read LEF layouts.
+    lef_files = x.technology.read_libs([
+        hammer_tech.filters.lef_filter
+    ], hammer_tech.HammerTechnologyUtils.to_plain_item)
+    if x.hierarchical_mode.is_nonleaf_hierarchical():
+        ilm_lefs = list(map(lambda ilm: ilm.lef, x.get_input_ilms()))
+        lef_files.extend(ilm_lefs)
+    verbose_append("read_physical -lef {{ {files} }}".format(
+        files=" ".join(lef_files)
+    ))
+
+    # Load input files and check that they are all Verilog.
+    if not x.check_input_files([".v", ".sv"]):
+        return False
+    # We are switching working directories and Genus still needs to find paths.
+    abspath_input_files = list(map(lambda name: os.path.join(os.getcwd(), name), x.input_files))  # type: List[str]
+
+    # If we are in hierarchical, we need to remove hierarchical sub-modules/sub-blocks.
+    if x.hierarchical_mode.is_nonleaf_hierarchical():
+        abspath_input_files = list(map(x.remove_hierarchical_submodules_from_file, abspath_input_files))
+
+    # Add any verilog_synth wrappers (which are needed in some technologies e.g. for SRAMs) which need to be
+    # synthesized.
+    abspath_input_files += x.technology.read_libs([
+        hammer_tech.filters.verilog_synth_filter
+    ], hammer_tech.HammerTechnologyUtils.to_plain_item)
+
+    # Read the RTL.
+    verbose_append("read_hdl {{ {} }}".format(" ".join(abspath_input_files)))
+
+    # Elaborate/parse the RTL.
+    verbose_append("elaborate {}".format(x.top_module))
+    # Preserve submodules
+    if x.hierarchical_mode.is_nonleaf_hierarchical():
+        for ilm in x.get_input_ilms():
+            verbose_append("set_db module:{top}/{mod} .preserve true".format(top=x.top_module, mod=ilm.module))
+    verbose_append("init_design -top {}".format(x.top_module))
+
+    # Prevent floorplanning targets from getting flattened.
+    # TODO: is there a way to track instance paths through the synthesis process?
+    verbose_append("set_db root: .auto_ungroup none")
+
+    # Set units to pF and technology time unit.
+    # Must be done after elaboration.
+    verbose_append("set_units -capacitance 1.0pF")
+    verbose_append("set_load_unit -picofarads 1")
+    verbose_append("set_units -time 1.0{}".format(x.get_time_unit().value_prefix + x.get_time_unit().unit))
+
+    # Set "don't use" cells.
+    for l in x.generate_dont_use_commands():
+        x.append(l)
+
+    return True
+
+def fusion_report_power(x: hammer_vlsi.HammerTool) -> bool:
+    x.append('''
+        report_power -view tt0p9v25c.pwr_view > reports/final_power.rpt    
+    ''', clean=True)
+    return True
+
+class ExampleDriver(CLIDriver):
+    def get_extra_synthesis_hooks(x) -> List[HammerToolHookAction]:
+        extra_hooks = [
+            hammer_vlsi.HammerTool.make_replacement_hook("init_environment", fusion_init_environment),
+            hammer_vlsi.HammerTool.make_pre_insertion_hook("write_outputs", fusion_report_power),
+        ]
+        return extra_hooks 
+
+if __name__ == '__main__':
+    ExampleDriver().main()

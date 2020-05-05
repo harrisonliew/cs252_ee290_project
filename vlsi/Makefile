@@ -31,7 +31,7 @@ else
 endif
 ENV_YML            ?= $(vlsi_dir)/bwrc-env.yml
 INPUT_CONFS        ?= hammer-tstech28-plugin/bwrc.yml fusion.yml
-HAMMER_EXEC        ?= hammer-vlsi
+HAMMER_EXEC        ?= ./fusion-vlsi
 VLSI_TOP           ?= $(TOP)
 VLSI_OBJ_DIR       ?= $(vlsi_dir)/build
 ifneq ($(CUSTOM_VLOG), )

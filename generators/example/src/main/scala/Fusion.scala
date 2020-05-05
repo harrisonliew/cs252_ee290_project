@@ -63,6 +63,8 @@ class FusionMMIOBlackBox(val c: FusionParams) extends BlackBox with HasBlackBoxR
 {
   val io = IO(new FusionIO(c))
 
+  override def desiredName = "hdc_top"
+
   addResource("/vsrc/hdc_top.v")
   addResource("/vsrc/const.vh")
   addResource("/vsrc/associative_memory/associative_memory.v")
@@ -92,6 +94,7 @@ class FusionMemory(val width: Int, val addrBits: Int) extends Module {
 
 trait FusionModule extends HasRegMap {
   val io: FusionTopIO
+  dontTouch(io)
 
   implicit val p: Parameters
   def params: FusionParams

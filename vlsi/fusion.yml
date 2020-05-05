@@ -4,7 +4,7 @@ vlsi.core.technology: tstech28
 vlsi.core.technology_path: ["hammer-tstech28-plugin"]
 vlsi.core.technology_path_meta: append
 
-vlsi.core.max_threads: 8
+vlsi.core.max_threads: 32
 
 # General Hammer Inputs
 
@@ -12,9 +12,20 @@ vlsi.core.max_threads: 8
 vlsi.inputs.power_spec_mode: "auto"
 vlsi.inputs.power_spec_type: "cpf"
 
+# Add TT corner for power analysis
+vlsi.inputs.mmmc_corners_meta: append
+vlsi.inputs.mmmc_corners: [
+  {
+    "name": "tt0p9v25c",
+    "type": "extra",
+    "voltage": "0.9 V",
+    "temp": "25 C"
+  }
+]
+
 # Specify clock signals
 vlsi.inputs.clocks: [
-  {name: "clock", period: "1ns", uncertainty: "0.1ns"}
+  {name: "clock", period: "4ns", uncertainty: "0.1ns"}
 ]
 
 # Generate Make include to aid in flow 
@@ -82,3 +93,15 @@ vlsi.core.drc_tool: "calibre"
 vlsi.core.drc_tool_path: ["hammer-mentor-plugins/drc"]
 vlsi.core.lvs_tool: "calibre"
 vlsi.core.lvs_tool_path: ["hammer-mentor-plugins/lvs"]
+
+# Submit command (use LSF)
+vlsi.submit:
+  command: "lsf"
+  settings: [{"lsf": {
+    "bsub_binary": "/tools/support/lsf/9.1/linux2.6-glibc2.3-x86_64/bin/bsub",
+    "num_cpus": 8,
+    "queue": "bora",
+    "extra_args": ["-R", "span[hosts=1]"]
+    }
+  }]
+  settings_meta: "append"
