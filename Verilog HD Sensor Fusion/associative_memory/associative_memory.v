@@ -88,7 +88,6 @@ always @(*) begin
 		next_A_class <= AM_A_class_P;
 	else
 		next_A_class <= AM_A[shift_start:shift_end];
-	end
 end
 
 always @(*) begin
@@ -96,7 +95,6 @@ always @(*) begin
 		next_V_class <= AM_V_class_P;
 	else
 		next_V_class <= AM_V[shift_start:shift_end];
-	end
 end
 
 assign shift_start = (ShiftCntr_SP-1)*`HV_DIMENSION;
