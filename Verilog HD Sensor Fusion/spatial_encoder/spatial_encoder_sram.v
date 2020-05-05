@@ -133,7 +133,7 @@ spatial_accumulator Spat_Accum_mod1(
 	.projM_negIN(projM_mod1_neg),
 	.projM_posIN(projM_mod1_pos),
 	.FeatureIn_DI(ChannelFeature_mod1_D),
-	.HypervectorOut_DO(HypervectorOut_mod1_DO),
+	.HypervectorOut_DO(HypervectorOut_mod1_DO)
 );
 
 spatial_accumulator Spat_Accum_mod2(
@@ -147,7 +147,7 @@ spatial_accumulator Spat_Accum_mod2(
 	.projM_negIN(projM_mod2_neg),
 	.projM_posIN(projM_mod2_pos),
 	.FeatureIn_DI(ChannelFeature_mod2_D),
-	.HypervectorOut_DO(HypervectorOut_mod2_DO),
+	.HypervectorOut_DO(HypervectorOut_mod2_DO)
 );
 
 spatial_accumulator Spat_Accum_mod3(
@@ -161,7 +161,7 @@ spatial_accumulator Spat_Accum_mod3(
 	.projM_negIN(projM_mod3_neg),
 	.projM_posIN(projM_mod3_pos),
 	.FeatureIn_DI(ChannelFeature_mod3_D),
-	.HypervectorOut_DO(HypervectorOut_mod3_DO),
+	.HypervectorOut_DO(HypervectorOut_mod3_DO)
 );
 
 //take majority of 3 modalities
@@ -225,6 +225,7 @@ always @(*) begin
 			ReadyOut_SO = 1;
 			InputBuffersEN_S = ValidIn_SI ? 1'b1 : 1'b0;
 		end
+
 		DATA_RECEIVED: begin
 			spatial_valid = 1'b1;
 			spatial_ready = 1'b1;
@@ -235,9 +236,10 @@ always @(*) begin
 				next_state = ACCUM_FED;
 			end
 			else begin
-				next_state = DATA_RECEIVED
+				next_state = DATA_RECEIVED;
 			end
 		end
+
 		ACCUM_FED: begin
 			spatial_valid = 1'b1;
 			spatial_ready = 1'b1;
@@ -255,17 +257,20 @@ always @(*) begin
 				next_state = ACCUM_FED;
 			end
 		end
+
 		CHANNELS_MAPPED: begin
 			next_state = ReadyIn_SI ? IDLE : CHANNELS_MAPPED;
 			ValidOut_SO = 1'b1;
 		end
+
 		default: ;
+
 	endcase // prev_state
 end
 
 //for sram, if the sram is valid and the modality is used, then valid, if the modality is used and sram is not valid, then not valid
 //if modality is not used, just go ahead, valid
-always @ (*) begin
+always @(*) begin
 	if (mod1_run) begin
 		if (sram_mod1_valid)
 			mod1_valid = 1'b1;
@@ -275,7 +280,7 @@ always @ (*) begin
 	else
 		mod1_valid = 1'b1;
 end
-always @ (*) begin
+always @(*) begin
 	if (mod2_run) begin
 		if (sram_mod2_valid)
 			mod2_valid = 1'b1;
@@ -285,7 +290,7 @@ always @ (*) begin
 	else
 		mod2_valid = 1'b1;
 end
-always @ (*) begin
+always @(*) begin
 	if (mod3_run) begin
 		if (sram_mod3_valid)
 			mod3_valid = 1'b1;
