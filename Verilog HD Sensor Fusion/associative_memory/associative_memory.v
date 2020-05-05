@@ -55,7 +55,7 @@ reg [SHIFT_CNTR_WIDTH-1:0] ShiftCntr_SP;
 wire [SHIFT_CNTR_WIDTH-1:0] ShiftCntr_SN;
 
 // Datapath signals
-wire [0:`HV_DIMENSION-1] SimilarityOut_A_D, SimilarityOut_V_D;
+wire [0:`HV_DIMENSION-1] SimilarityOut_A_D, SimilarityOut_V_D, AM_A_class0, AM_A_class1, AM_V_class0, AM_V_class1;
 reg [`DISTANCE_WIDTH-1:0] AdderOut_A_D, AdderOut_V_D;
 wire CompRegisterSEN_A_S, CompRegisterSEN_V_S;
 reg OutputBuffersEN_S, ShiftMemoryEN_S, QueryHypervectorEN_S, CompRegisterEN_S, CompRegisterCLR_S, ShiftCntrEN_S, ShiftCntrCLR_S;
@@ -86,20 +86,33 @@ reg [0:`HV_DIMENSION-1] next_A_class, next_V_class;
 always @(*) begin
 	if (ShiftComplete_S)
 		next_A_class <= AM_A_class_P;
-	else
-		next_A_class <= AM_A[shift_start:shift_end];
+	else begin
+		if (ShiftCntr_SP == 1'b1)
+			next_A_class <= AM_A_class1;
+		else
+			next_A_class <= AM_A_class0;
+	end
 end
 
 always @(*) begin
 	if (ShiftComplete_S)
 		next_V_class <= AM_V_class_P;
-	else
-		next_V_class <= AM_V[shift_start:shift_end];
+	else begin
+		if (ShiftCntr_SP == 1'b1)
+			next_V_class <= AM_V_class1;
+		else
+			next_V_class <= AM_V_class0;
+	end
 end
 
-assign shift_start = (ShiftCntr_SP-1)*`HV_DIMENSION;
-assign shift_end = (ShiftCntr_SP-1)*`HV_DIMENSION+`HV_DIMENSION-1;
+//assign shift_start = (ShiftCntr_SP-1)*`HV_DIMENSION;
+//assign shift_end = (ShiftCntr_SP-1)*`HV_DIMENSION+`HV_DIMENSION-1;
 
+assign AM_A_class0 = AM_A[0:`HV_DIMENSION-1];
+assign AM_A_class1 = AM_A[`HV_DIMENSION:`HV_DIMENSION+`HV_DIMENSION-1]
+
+assign AM_V_class0 = AM_V[0:`HV_DIMENSION-1];
+assign AM_V_class1 = AM_V[`HV_DIMENSION:`HV_DIMENSION+`HV_DIMENSION-1]
 //A
 //Set next class
 assign AM_A_class_N = next_A_class;
