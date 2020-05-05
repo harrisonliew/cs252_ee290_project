@@ -314,7 +314,9 @@ function Ngram = computeNgramproj (buffer, CiM, N, precision, iM, channels,projM
       else
         record = mode(v); 
       end
-		Ngram = xor(circshift (Ngram, [1,1]) , record);
+        circ = circshift (Ngram, [1,1]);
+        circ(1) = 0;
+		Ngram = xor(circ , record);
            
     end	 
  

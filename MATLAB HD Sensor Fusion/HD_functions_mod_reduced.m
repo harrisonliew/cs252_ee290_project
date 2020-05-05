@@ -288,12 +288,12 @@ function v = computeNgramproj (buffer, CiM, N, precision, iM, channels,projM_pos
 % 	Ngram    :  query hypervector
     
     %setup for first sample duplicate for all modalities
-    chHV = projItemMemeory (projM_pos, projM_neg, buffer(sample_index, 1),1,D);
+    chHV = projItemMemeory_bin (projM_pos, projM_neg, buffer(sample_index, 1),1,D);
     chHV = xor(chHV , iM(1));
     v = chHV;
     if channels>1    
     for i = 2 : channels
-        chHV = projItemMemeory (projM_pos, projM_neg, buffer(sample_index, i), i,D);
+        chHV = projItemMemeory_bin (projM_pos, projM_neg, buffer(sample_index, i), i,D);
         chHV = xor(chHV , iM(i));
         if i == 2
             ch2HV=chHV; 
@@ -349,7 +349,7 @@ function v = computeNgramproj (buffer, CiM, N, precision, iM, channels,projM_pos
 %  
 end
   
-function [numPat, AM] = hdctrainproj (labelTrainSet1, labelTrainSet2, labelTrainSet3, trainSet1, trainSet2, trainSet3, CiM, iM1, iM2, iM3, D, N, precision, channels1, channels2, channels3,projM1_pos, projM1_neg, projM2_pos, projM2_neg, projM3_pos, projM3_neg ) 
+function [numPat, AM] = hdctrainproj (classes,labelTrainSet1, labelTrainSet2, labelTrainSet3, trainSet1, trainSet2, trainSet3, CiM, iM1, iM2, iM3, D, N, precision, channels1, channels2, channels3,projM1_pos, projM1_neg, projM2_pos, projM2_neg, projM3_pos, projM3_neg ) 
 %
 % DESCRIPTION   : train an associative memory based on input training data
 %
@@ -369,10 +369,11 @@ function [numPat, AM] = hdctrainproj (labelTrainSet1, labelTrainSet2, labelTrain
  
 	AM = containers.Map ('KeyType','double','ValueType','any');
 
-	
+	am_index = 0;
     for label = 1:1:max(labelTrainSet1)
-    	AM (label) = zeros (1,D);
+    	AM (am_index) = zeros (1,D);
 	    numPat (label) = 0;
+        am_index = am_index+1;
     end
     trainVecList=zeros (1,D);
     i = 1;
@@ -430,7 +431,7 @@ function [numPat, AM] = hdctrainproj (labelTrainSet1, labelTrainSet2, labelTrain
             ngram = xor(circ , record);
         end
             trainVecList = [trainVecList ; ngram];
-	        numPat (labelTrainSet1 (i+N-1)) = numPat (labelTrainSet1 (i+N-1)) + 1;
+	        %numPat (labelTrainSet1 (i+N-1)) = numPat (labelTrainSet1 (i+N-1)) + 1;
             
             i = i + 1;
         else
@@ -438,9 +439,10 @@ function [numPat, AM] = hdctrainproj (labelTrainSet1, labelTrainSet2, labelTrain
             %set AM vector to be the bundled version of all the ngrams for
             %that label, then move onto next label
             trainVecList(1 , :) = 3;
+            label
             AM (label) = mode (trainVecList);
             label = labelTrainSet1(i);
-            numPat (label) = 0;
+            %numPat (label) = 0;
             trainVecList=zeros (1,D);
         end
     end
@@ -449,9 +451,12 @@ function [numPat, AM] = hdctrainproj (labelTrainSet1, labelTrainSet2, labelTrain
        l= length(labelTrainSet1);
     end    
     %wrap up the last training class
-    AM (labelTrainSet1 (l)) = mode (trainVecList);   
-    for label = 1:1:max(labelTrainSet1)
-		fprintf ('Class = %d \t sum = %.0f \t created \n', label, sum(AM(label)));
+    labelTrainSet1(l)
+    AM (labelTrainSet1 (l)) = mode (trainVecList); 
+    am_index = 0;
+    for label = 1:1:classes
+		fprintf ('Class = %d \t sum = %.0f \t created \n', label, sum(AM(am_index)));
+        am_index = am_index + 1;
     end
 end
 
@@ -478,6 +483,7 @@ function [accExcTrnz, accuracy, predicLabel, actualLabel, all_error] = hdcpredic
 	tranzError = 0;
 	all_error = 0;
     second_error_all=0;
+    label_am = 0;
    
     for i = 1:1:length(testSet1)-N+1        
 		numTests = numTests + 1;
@@ -562,14 +568,20 @@ function [predict_hamm, error, second_error] = hamming (q, aM, classes)
 %
 
     sims = [];
-     
+    am_index = 0;
     for j = 1 : classes
-        sims(j) = sum(xor(q,aM(j)));
+        sims(j) = sum(xor(q,aM(am_index)));
+        am_index = am_index + 1;
     end
     
     [error, indx]=min(sims');
     M=sort(sims);
     second_error=M(2);
-    predict_hamm=indx;
+    if indx == 1
+        predict_hamm=0;
+    else
+        predict_hamm=1;
+    end
+    %predict_hamm=indx;
      
 end
