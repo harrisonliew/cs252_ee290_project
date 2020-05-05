@@ -81,9 +81,9 @@ wire [0:`HV_DIMENSION-1] HypervectorOut_mod1_DO, HypervectorOut_mod2_DO, Hyperve
 wire xor_mod1_final, xor_mod2_final, xor_mod3_final, store_second;
 
 //addresses for SRAM w/width of 2000 bits for each modality
-wire [channel_bit_sub1:0] addr_mod1;
-wire [channel_bit_sub1:0] addr_mod2;
-wire [channel_bit_sub1:0] addr_mod3;
+//wire [channel_bit_sub1:0] addr_mod1;
+//wire [channel_bit_sub1:0] addr_mod2;
+//wire [channel_bit_sub1:0] addr_mod3;
 
 
 // DATAPATH
