@@ -53,10 +53,14 @@ module spatial_accumulator
 				Accumulator_DN[i] = XOR_output[i];
 			end
 			else if (XOR_output[i]) begin
-				Accumulator_DN[i] = Accumulator_DP[i] + {`SPATIAL_WIDTH-1{1'b0},1'b1};
 				if (xor_final) begin
 					if (xor_final_channel[i])
 						Accumulator_DN[i] = Accumulator_DP[i] + {`SPATIAL_WIDTH-2{1'b0},2'b10};
+					else 
+						Accumulator_DN[i] = Accumulator_DP[i] + {`SPATIAL_WIDTH-1{1'b0},1'b1};
+				end
+				else begin
+					Accumulator_DN[i] = Accumulator_DP[i] + {`SPATIAL_WIDTH-1{1'b0},1'b1};
 				end
 			end
 			else
@@ -69,7 +73,6 @@ module spatial_accumulator
 	for (j=0; j<`SPATIAL_DIMENSION; j=j+1) begin
 		//if greater than number of channels (217) / 2
 		assign HypervectorOut_DO[j]  = (Accumulator_DP[j] > {`SPATIAL_WIDTH-7{1'b0},7'b1101100}) ? 1'b1 : 1'b0;
-		//assign HypervectorOut_DO[j] = Accumulator_DP[j][`SPATIAL_WIDTH-1];
 	end
 
 	// update accumulator reg
