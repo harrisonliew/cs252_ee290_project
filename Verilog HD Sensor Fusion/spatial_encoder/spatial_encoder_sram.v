@@ -38,8 +38,8 @@ module spatial_encoder
 	input [0:`HV_DIMENSION-1] projM_mod1_neg, projM_mod2_neg, projM_mod3_neg, 
 	input [0:`HV_DIMENSION-1] projM_mod1_pos, projM_mod2_pos, projM_mod3_pos,
 	// spatial encoder ready and valid signals, 1 for each modality
-	output spatial_ready, spatial_ready_1, spatial_ready_2, spatial_ready_3,
-	output spatial_valid, spatial_valid_1, spatial_valid_2, spatial_valid_3,
+	output spatial_ready_1, spatial_ready_2, spatial_ready_3,
+	output spatial_valid_1, spatial_valid_2, spatial_valid_3,
 	// use same address for each iM, projM_neg and projM_pos for the corresponding modality
 	output [`ceilLog2(`INPUT_CHANNELS)-1:0] addr_mod1, addr_mod2, addr_mod3
 );
@@ -57,11 +57,11 @@ localparam channel_bit_sub8 = `ceilLog2(`INPUT_CHANNELS)-8;
 
 // FSM and control signals
 reg [1:0] prev_state, next_state;
-reg InputBuffersEN_S, AccumulatorEN_mod1_S, AccumulatorEN_mod2_S, AccumulatorEN_mod3_S, CycleCntrEN_S, CycleCntrCLR_S;
+reg InputBuffersEN_S, AccumulatorEN_mod1_S, AccumulatorEN_mod2_S, AccumulatorEN_mod3_S, CycleCntrEN_S, CycleCntrCLR_S, AccumulatorEN_S;
 reg FirstHypervector_S;
 wire LastChannel_S;
 wire sram_mod1_valid, sram_mod2_valid, sram_mod3_valid;
-reg mod1_valid, mod2_valid, mod3_valid;
+reg mod1_valid, mod2_valid, mod3_valid, spatial_valid, spatial_ready;
 
 // Cycle (channel) counter
 reg [channel_bit_sub1:0] CycleCntr_SP;
@@ -77,7 +77,7 @@ wire [`CHANNEL_WIDTH-1:0] ChannelFeature_mod1_D, ChannelFeature_mod2_D, ChannelF
 //accumulation of each modality
 wire [0:`HV_DIMENSION-1] HypervectorOut_mod1_DO, HypervectorOut_mod2_DO, HypervectorOut_mod3_DO;
 //keep track of second channel for xor and accumulate when at final channel
-wire xor_mod1_final, xor_mod2_final, xor_mod3_final, store_second, AccumulatorEN_S;
+wire xor_mod1_final, xor_mod2_final, xor_mod3_final, store_second;
 
 //addresses for SRAM w/width of 2000 bits for each modality
 wire [channel_bit_sub1:0] addr_mod1;
@@ -141,7 +141,7 @@ spatial_accumulator Spat_Accum_mod2(
 	.Reset_RI(Reset_RI),
 	.Enable_SI(AccumulatorEN_mod2_S),
 	.xor_final(xor_mod2_final),
-	.store_second(store_second)
+	.store_second(store_second),
 	.FirstHypervector_SI(FirstHypervector_S),
 	.HypervectorIn_DI(IMOut_mod2_D),
 	.projM_negIN(projM_mod2_neg),
