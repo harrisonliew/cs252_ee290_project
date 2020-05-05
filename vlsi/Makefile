@@ -18,7 +18,7 @@ include $(base_dir)/variables.mk
 # vlsi types and rules
 #########################################################################################
 sim_name           ?= vcs # needed for GenerateSimFiles, but is unused
-tech_name          ?= asap7
+tech_name          ?= intech22
 tech_dir           ?= $(if $(filter $(tech_name), asap7), $(vlsi_dir)/hammer/src/hammer-vlsi/technology/$(tech_name), $(vlsi_dir)/hammer-$(tech_name)-plugin/$(tech_name))
 SMEMS_COMP         ?= $(tech_dir)/sram-compiler.json
 SMEMS_CACHE        ?= $(tech_dir)/sram-cache.json
@@ -29,8 +29,8 @@ else
 	MACROCOMPILER_MODE ?= -l $(SMEMS_CACHE) -hir $(SMEMS_HAMMER)
 endif
 ENV_YML            ?= $(vlsi_dir)/env.yml
-INPUT_CONFS        ?= example.yml
-HAMMER_EXEC        ?= ./example-vlsi
+INPUT_CONFS        ?= fusion.yml
+HAMMER_EXEC        ?= hammer-vlsi
 VLSI_TOP           ?= $(TOP)
 VLSI_OBJ_DIR       ?= $(vlsi_dir)/build
 ifneq ($(CUSTOM_VLOG), )

@@ -28,6 +28,7 @@ class Top(implicit p: Parameters) extends System
   with HasPeripheryGPIO // Enables optionally adding the sifive GPIOs
   with CanHavePeripheryBlockDevice // Enables optionally adding the block device
   with CanHavePeripheryInitZero // Enables optionally adding the initzero example widget
+  with CanHavePeripheryFusion // Enables optionally adding the Fusion widget
   with CanHavePeripheryGCD // Enables optionally adding the GCD example widget
   with CanHavePeripherySerial // Enables optionally adding the TSI serial-adapter and port
   with CanHavePeripheryIceNIC // Enables optionally adding the IceNIC for FireSim
@@ -40,6 +41,7 @@ class TopModule[+L <: Top](l: L) extends SystemModule(l)
   with HasPeripheryGPIOModuleImp
   with HasPeripheryUARTModuleImp
   with CanHavePeripheryBlockDeviceModuleImp
+  with CanHavePeripheryFusionModuleImp
   with CanHavePeripheryGCDModuleImp
   with CanHavePeripherySerialModuleImp
   with CanHavePeripheryIceNICModuleImp

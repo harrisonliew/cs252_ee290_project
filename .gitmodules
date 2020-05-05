@@ -113,3 +113,6 @@
 [submodule "generators/example/software/esp-tests"]
 	path = generators/example/software/esp-tests
 	url = https://github.com/ucb-bar/esp-tests.git
+[submodule "vlsi/hammer-intech22-plugin"]
+	path = vlsi/hammer-intech22-plugin
+	url = git@bwrcrepo.eecs.berkeley.edu:intech22/hammer-intech22-plugin.git

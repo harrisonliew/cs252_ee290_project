@@ -1,0 +1,85 @@
+# Technology Setup
+# Technology used is intech22
+vlsi.core.technology: intech22
+vlsi.core.technology_path: ["hammer-intech22-plugin"]
+vlsi.core.technology_path_meta: append
+
+vlsi.core.max_threads: 8
+
+# General Hammer Inputs
+
+# Hammer will auto-generate a CPF for simple power designs; see hammer/src/hammer-vlsi/defaults.yml for more info
+vlsi.inputs.power_spec_mode: "auto"
+vlsi.inputs.power_spec_type: "cpf"
+
+# Specify clock signals
+vlsi.inputs.clocks: [
+  {name: "clock", period: "1ns", uncertainty: "0.1ns"}
+]
+
+# Generate Make include to aid in flow 
+vlsi.core.build_system: make
+
+# Power Straps
+par.power_straps_mode: generate
+par.generate_power_straps_method: by_tracks
+par.blockage_spacing: 2.0
+par.generate_power_straps_options:
+  by_tracks:
+    strap_layers:
+      - m3
+      - m4
+      - m5
+      - m6
+    track_width: 1
+    track_width_m5: 2
+    track_width_m6: 4
+    track_spacing: 0
+    track_spacing_m3: 2
+    track_spacing_m4: 2 
+    track_start: 10
+    power_utilization: 0.2
+    power_utilization_m5: 0.1
+
+# Placement Constraints
+# vlsi.inputs.placement_constraints:
+
+# Pin placement constraints
+vlsi.inputs.pin_mode: generated
+vlsi.inputs.pin.generate_mode: semi_auto
+vlsi.inputs.pin.assignments: [
+  {pins: "*", layers: ["m3", "m5"], side: "bottom"}
+]
+
+# Paths to extra libraries
+# vlsi.technology.extra_libraries_meta: ["append", "deepsubst"]
+# vlsi.technology.extra_libraries:
+
+# Because the DCO is a dummy layout, we treat it as a physical-only cell
+# par.inputs.physical_only_cells_mode: append
+# par.inputs.physical_only_cells_list:
+
+# SRAM Compiler compiler options
+vlsi.core.sram_generator_tool: "sram_compiler"
+vlsi.core.sram_generator_tool_path: ["hammer-intech22-plugin"]
+vlsi.core.sram_generator_tool_path_meta: "append"
+
+# Tool options. Replace with your tool plugin of choice.
+cadence.cadence_home: "/share/instsww/cadence"
+# Genus options
+vlsi.core.synthesis_tool: "genus"
+vlsi.core.synthesis_tool_path: ["hammer-cadence-plugins/synthesis"]
+vlsi.core.synthesis_tool_path_meta: "append"
+synthesis.genus.version: "1813"
+# Innovus options
+vlsi.core.par_tool: "innovus"
+vlsi.core.par_tool_path: ["hammer-cadence-plugins/par"]
+vlsi.core.par_tool_path_meta: "append"
+par.innovus.version: "191_ISR3"
+par.innovus.design_flow_effort: "standard"
+par.inputs.gds_merge: true
+# ICV options
+vlsi.core.drc_tool: "icv"
+vlsi.core.drc_tool_path: ["hammer-synopsys-plugins/drc"]
+vlsi.core.lvs_tool: "icv"
+vlsi.core.lvs_tool_path: ["hammer-synopsys-plugins/lvs"]

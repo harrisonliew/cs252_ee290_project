@@ -1,6 +1,6 @@
 include $(abs_top_srcdir)/Makefrag
 
-tests = main
+tests = main spatial
 
 tests_baremetal = $(tests:=-baremetal)
 ifdef BAREMETAL_ONLY

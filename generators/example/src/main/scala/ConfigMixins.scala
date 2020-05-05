@@ -107,6 +107,10 @@ class WithDTM extends Config((site, here, up) => {
   }
 })
 
+class WithFusion extends Config((site, here, up) => {
+  case FusionKey => Some(FusionParams)
+})
+
 // DOC include start: GCD mixin
 /**
  * Mixin to add a GCD peripheral

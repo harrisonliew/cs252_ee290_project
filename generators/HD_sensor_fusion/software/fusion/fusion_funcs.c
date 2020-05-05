@@ -86,13 +86,9 @@ void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint
 
     memset( query, 0, (bit_dim+1)*sizeof(uint64_t));
 
-    //uint64_t chHV[channels+1];
-    
-    int num_majs = (channels+1)/64 + 1;
-	//uint64_t majority[num_majs];
-    //memset( majority, 0, num_majs*sizeof(uint64_t));
+    int num_mats = (channels+1)/64 + 1;
 
-    uint64_t chHV[num_majs*64];
+    uint64_t chHV[num_mats*64];
 
 	//Spatial Encoder: captures the spatial information for a given time-aligned samples of channels
 	for(int i = 0; i < bit_dim + 1; i++){
@@ -110,7 +106,7 @@ void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint
 		//this is done in the Matlab for some reason???
 		chHV[channels] = chHV[channels-1] ^ chHV[1];
 
-        for(int j = channels+1; j < num_majs*64; j++){
+        for(int j = channels+1; j < num_mats*64; j++){
             chHV[j] = 0;
         }
 
@@ -126,7 +122,7 @@ void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint
             maj_start = read_cycles();
         #endif
 
-        for (int n = 0; n < num_majs*64; n += 64) {
+        for (int n = 0; n < num_mats*64; n += 64) {
             //taken from Hacker's Delight. ~400 instructions.
             mask = 0x00000000FFFFFFFFULL;
             for (int j = 32; j != 0; j = j >> 1, mask = mask ^ (mask << j)) {
@@ -145,7 +141,7 @@ void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint
         //note row indices swapped with desired bit position after transpose
 		for(int z = 63; z >= 0; z--){
             int num_set_bits = 0;
-            for (int n = 63; n < num_majs*64; n += 64) {
+            for (int n = 63; n < num_mats*64; n += 64) {
                 num_set_bits += numberOfSetBits(chHV[n-z]);
             }
             if (num_set_bits > channels/2) query[i] = query[i] | ( 1ULL << z ) ;
