@@ -58,7 +58,7 @@ wire [SHIFT_CNTR_WIDTH-1:0] ShiftCntr_SN;
 // Datapath signals
 wire [0:`HV_DIMENSION-1] SimilarityOut_A_D, SimilarityOut_V_D, AM_A_class0, AM_A_class1, AM_V_class0, AM_V_class1;
 reg [`DISTANCE_WIDTH-1:0] AdderOut_A_D_P, AdderOut_V_D_P;
-wire [`DISTANCE_WIDTH-1:0] AdderOut_A_D_N, AdderOut_V_D_N;
+reg [`DISTANCE_WIDTH-1:0] AdderOut_A_D_N, AdderOut_V_D_N;
 wire CompRegisterSEN_A_S, CompRegisterSEN_V_S;
 reg OutputBuffersEN_S, ShiftMemoryEN_S, QueryHypervectorEN_S, CompRegisterEN_S, CompRegisterCLR_S, ShiftCntrEN_S, ShiftCntrCLR_S;
 wire ShiftComplete_S, popcount_complete;
