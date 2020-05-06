@@ -65,11 +65,18 @@ channels_a_EXG=channels_a+channels_a_ECG+channels_a_EEG;
 
 
 [chAM1, iMch1] = initItemMemories (D, maxL, channels_v);
-[chAM2, iMch2] = initItemMemories (D, maxL, channels_a);
+%[chAM2, iMch2] = initItemMemories (D, maxL, channels_a);
 [chAM3, iMch3] = initItemMemories (D, maxL, channels_v_ECG);
-[chAM4, iMch4] = initItemMemories (D, maxL, channels_a_ECG);
+%[chAM4, iMch4] = initItemMemories (D, maxL, channels_a_ECG);
 [chAM5, iMch5] = initItemMemories (D, maxL, channels_v_EEG);
-[chAM6, iMch6] = initItemMemories (D, maxL, channels_a_EEG);
+%[chAM6, iMch6] = initItemMemories (D, maxL, channels_a_EEG);
+
+for i=1:1:channels_v_ECG
+    iMch3(i) = iMch5(i)
+end
+for i=1:1:channels_v
+    iMch1(i) = iMch5(i)
+end
 [chAM7, iMch7] = initItemMemories (D, maxL, channels_v_EXG);
 [chAM8, iMch8] = initItemMemories (D, maxL, channels_a_EXG);
 
@@ -228,15 +235,15 @@ fprintf ('HDC for A\n');
 % %class 2
 %hdc_model_2(2)=mode([hdc_model_2(2); hdc_model_4(2); hdc_model_6(2)]);
 
-for i=1:channels_a
-iMch8(i)=iMch2(i);
-end
-for i=channels_a+1:channels_a+channels_a_ECG
-iMch8(i)=iMch4(i-channels_a);
-end
-for i=channels_a+channels_a_ECG+1:channels_a+channels_a_ECG+channels_a_EEG
-iMch8(i)=iMch6(i-channels_a-channels_a_ECG);
-end
+%for i=1:channels_a
+%iMch8(i)=iMch2(i);
+%end
+%for i=channels_a+1:channels_a+channels_a_ECG
+%iMch8(i)=iMch4(i-channels_a);
+%end
+%for i=channels_a+channels_a_ECG+1:channels_a+channels_a_ECG+channels_a_EEG
+%iMch8(i)=iMch6(i-channels_a-channels_a_ECG);
+%end
 
 %hdc_model_2 -> hdc_model for early fusion
 [acc_ex2, acc2, pl2, al2, all_error] = hdcpredictproj  (reduced_L_TS_COMPLETE_2, reduced_TS_COMPLETE_2, reduced_L_TS_COMPLETE_2, reduced_TS_COMPLETE_4, reduced_L_TS_COMPLETE_2, reduced_TS_COMPLETE_6,hdc_model_2, chAM8, iMch1, iMch3, iMch5, D, N, precision, classes, channels_a,channels_a_ECG,channels_a_EEG, projM1_pos, projM1_neg, projM3_pos, projM3_neg, projM5_pos, projM5_neg);
@@ -261,15 +268,15 @@ fprintf ('HDC for V\n');
 %class 2
 %hdc_model_1(2)=mode([hdc_model_1(2); hdc_model_3(2); hdc_model_5(2)]);
 
-for i=1:channels_v
-iMch7(i)=iMch1(i);
-end
-for i=channels_v+1:channels_v+channels_v_ECG
-iMch7(i)=iMch3(i-channels_v);
-end
-for i=channels_v+channels_v_ECG+1:channels_v+channels_v_ECG+channels_v_EEG
-iMch7(i)=iMch5(i-channels_v-channels_v_ECG);
-end
+%for i=1:channels_v
+%iMch7(i)=iMch1(i);
+%end
+%for i=channels_v+1:channels_v+channels_v_ECG
+%iMch7(i)=iMch3(i-channels_v);
+%end
+%for i=channels_v+channels_v_ECG+1:channels_v+channels_v_ECG+channels_v_EEG
+%iMch7(i)=iMch5(i-channels_v-channels_v_ECG);
+%end
 
 %hdc_model_1 -> hdc_model for early fusion
 [acc_ex1, acc1, pl1, al1, all_error] = hdcpredictproj  (reduced_L_TS_COMPLETE_1, reduced_TS_COMPLETE_1, reduced_L_TS_COMPLETE_1, reduced_TS_COMPLETE_3, reduced_L_TS_COMPLETE_1, reduced_TS_COMPLETE_5,hdc_model_1, chAM8, iMch1, iMch3, iMch5, D, N, precision, classes, channels_v,channels_v_ECG,channels_v_EEG,projM1_pos,projM1_neg,projM3_pos,projM3_neg,projM5_pos,projM5_neg);
@@ -297,8 +304,8 @@ end
 end
 
 iMfull = [];
-for i = 1:1:iMch7.Count
-    iMfull = [iMfull iMch7(i)]; %#ok<AGROW>
+for i = 1:1:iMch5.Count
+    iMfull = [iMfull iMch5(i)]; %#ok<AGROW>
 end
 
 projM_pos_full = [];
