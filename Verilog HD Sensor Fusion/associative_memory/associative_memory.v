@@ -105,7 +105,7 @@ always @(*) begin
 			AM_A_class_N <= AM_A_class0;
 	end
 	else begin
-		AM_A_class_N = AM_A_class_P;
+		AM_A_class_N <= AM_A_class_P;
 	end
 end
 
@@ -119,7 +119,7 @@ always @(*) begin
 			AM_V_class_N <= AM_V_class0;
 	end
 	else begin
-		AM_V_class_N = AM_V_class_P;
+		AM_V_class_N <= AM_V_class_P;
 	end
 end
 
