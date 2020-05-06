@@ -203,7 +203,7 @@ assign spatial_ready_3 = spatial_ready && mod3_run;
 // FSM
 always @(*) begin
 	// default values
-	next_state = IDLE;
+	next_state = DATA_RECEIVED;
 	spatial_valid = 1'b0;
 	spatial_ready = 1'b0;
 	ReadyOut_SO = 1'b0;
@@ -301,7 +301,7 @@ end
 // FSM state transitions
 always @(posedge Clk_CI) begin
 	if (Reset_RI)
-		prev_state <= IDLE;
+		prev_state <= DATA_RECEIVED;
 	else
 		prev_state <= next_state;
 end
