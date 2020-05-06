@@ -193,7 +193,7 @@ assign mod3_run = (CycleCntr_SP <= {{channel_bit_sub8{1'b0}},8'b11010101});
 //enable each modality's accumulation
 assign AccumulatorEN_mod1_S = AccumulatorEN_S && mod1_run;
 assign AccumulatorEN_mod2_S = AccumulatorEN_S && mod2_run;
-assign AccumulatorEN_mod2_S = AccumulatorEN_S && mod3_run;
+assign AccumulatorEN_mod3_S = AccumulatorEN_S && mod3_run;
 
 //set valid and ready for specific modalities
 assign spatial_valid_1 = spatial_valid && mod1_run;
