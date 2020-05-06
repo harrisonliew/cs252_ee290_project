@@ -16,12 +16,6 @@ module spatial_encoder_sram
 	output [0:`HV_DIMENSION-1] HypervectorOut_DO,
 
 	//SRAM
-	//sram1 = iM1, modality 1, IMOut_mod1_D
-	//sram2 = projm1_neg, modality 1, projM_mod1_neg
-	//sram3 = projm1_pos, modality 1, projM_mod1_pos
-	//sram4 = iM2, modality 2, IMOut_mod2_D
-	//sram5 = projm2_neg, modality 2, projM_mod2_neg
-	//sram6 = projm2_pos, modality 2, projM_mod2_pos
 	//sram7 = iM3, modality 3, IMOut_mod3_D
 	//sram8 = projm3_neg, modality 3, projM_mod3_neg
 	//sram9 = projm3_pos, modality 3, projM_mod3_pos
@@ -34,14 +28,14 @@ module spatial_encoder_sram
 	input sram7_ready, sram7_valid,
 	input sram8_ready, sram8_valid,
 	input sram9_ready, sram9_valid,
-	input [0:`HV_DIMENSION-1] IMOut_mod1_D, IMOut_mod2_D, IMOut_mod3_D,
-	input [0:`HV_DIMENSION-1] projM_mod1_neg, projM_mod2_neg, projM_mod3_neg, 
-	input [0:`HV_DIMENSION-1] projM_mod1_pos, projM_mod2_pos, projM_mod3_pos,
+	input [0:`HV_DIMENSION-1] IMOut_mod3_D,
+	input [0:`HV_DIMENSION-1] projM_mod3_neg, 
+	input [0:`HV_DIMENSION-1] projM_mod3_pos,
 	// spatial encoder ready and valid signals, 1 for each modality
 	output spatial_ready_1, spatial_ready_2, spatial_ready_3,
 	output spatial_valid_1, spatial_valid_2, spatial_valid_3,
 	// use same address for each iM, projM_neg and projM_pos for the corresponding modality
-	output [`ceilLog2(`INPUT_CHANNELS)-1:0] addr_mod1, addr_mod2, addr_mod3
+	output [`ceilLog2(`INPUT_CHANNELS)-1:0] sram_addr
 );
 
 // FSM state definitions
@@ -81,9 +75,9 @@ wire [0:`HV_DIMENSION-1] HypervectorOut_mod1_DO, HypervectorOut_mod2_DO, Hyperve
 wire xor_mod1_final, xor_mod2_final, xor_mod3_final, store_second;
 
 //addresses for SRAM w/width of 2000 bits for each modality
-//wire [channel_bit_sub1:0] addr_mod1;
-//wire [channel_bit_sub1:0] addr_mod2;
-//wire [channel_bit_sub1:0] addr_mod3;
+wire [channel_bit_sub1:0] addr_mod1;
+wire [channel_bit_sub1:0] addr_mod2;
+wire [channel_bit_sub1:0] addr_mod3;
 
 
 // DATAPATH
@@ -107,6 +101,8 @@ always @(posedge Clk_CI) begin
 end
 
 //keep track of address for each modality
+assign sram_addr = CycleCntr_SP;
+
 assign addr_mod1 = CycleCntr_SP;
 assign addr_mod2 = CycleCntr_SP + `FIRST_MODALITY_CHANNELS;
 assign addr_mod3 = CycleCntr_SP + `FIRST_MODALITY_CHANNELS + `SECOND_MODALITY_CHANNELS;
@@ -130,9 +126,9 @@ spatial_accumulator Spat_Accum_mod1(
 	.xor_final(xor_mod1_final),
 	.store_second(store_second),
 	.FirstHypervector_SI(FirstHypervector_S),
-	.HypervectorIn_DI(IMOut_mod1_D),
-	.projM_negIN(projM_mod1_neg),
-	.projM_posIN(projM_mod1_pos),
+	.HypervectorIn_DI(IMOut_mod3_D),
+	.projM_negIN(projM_mod3_neg),
+	.projM_posIN(projM_mod3_pos),
 	.FeatureIn_DI(ChannelFeature_mod1_D),
 	.HypervectorOut_DO(HypervectorOut_mod1_DO)
 );
@@ -144,9 +140,9 @@ spatial_accumulator Spat_Accum_mod2(
 	.xor_final(xor_mod2_final),
 	.store_second(store_second),
 	.FirstHypervector_SI(FirstHypervector_S),
-	.HypervectorIn_DI(IMOut_mod2_D),
-	.projM_negIN(projM_mod2_neg),
-	.projM_posIN(projM_mod2_pos),
+	.HypervectorIn_DI(IMOut_mod3_D),
+	.projM_negIN(projM_mod3_neg),
+	.projM_posIN(projM_mod3_pos),
 	.FeatureIn_DI(ChannelFeature_mod2_D),
 	.HypervectorOut_DO(HypervectorOut_mod2_DO)
 );
@@ -170,7 +166,6 @@ genvar k;
 for (k=0; k<`HV_DIMENSION; k=k+1) begin
 	assign HypervectorOut_DO[k]  = (HypervectorOut_mod1_DO[k] && HypervectorOut_mod2_DO[k]) || (HypervectorOut_mod1_DO[k] && HypervectorOut_mod3_DO[k]) || (HypervectorOut_mod2_DO[k] && HypervectorOut_mod3_DO[k]);
 end
-
 
 
 // CONTROLLER
