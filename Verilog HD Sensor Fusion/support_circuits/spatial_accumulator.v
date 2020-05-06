@@ -17,7 +17,7 @@ module spatial_accumulator
 
 
 	// output value
-	output [0:`SPATIAL_DIMENSION-1] HypervectorOut_DO
+	output [0:`HV_DIMENSION-1] HypervectorOut_DO
 );
 	// accumulator register
 	reg [`SPATIAL_WIDTH-1:0] Accumulator_DP [0:`SPATIAL_DIMENSION-1];

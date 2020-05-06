@@ -33,7 +33,7 @@ module hdc_top
 
 // spatial -> temporal
 wire Ready_ST, Valid_ST;
-wire [0:`HV_DIMENSION-1] Hypervector_modST;
+wire [0:`HV_DIMENSION-1] Hypervector_ST;
 
 // temporal -> AM
 wire Ready_TA, Valid_TA;
