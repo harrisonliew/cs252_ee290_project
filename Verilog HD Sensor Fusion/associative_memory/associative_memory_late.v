@@ -157,48 +157,50 @@ assign V_chunk8 = SimilarityOut_V_D[`AM_CHUNK*7:`AM_CHUNK*8-1];
 integer j;
 always @(*) begin
 	for (j=0; j<`AM_CHUNK; j=j+1) begin
+		AdderOut_A_D_N = AdderOut_A_D_P;
 		if (popcount_loop_P == 8)
-			AdderOut_A_D_N <= AdderOut_A_D_P + A_chunk8[j];
+			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk8[j];
 		else if (popcount_loop_P == 7)
-			AdderOut_A_D_N <= AdderOut_A_D_P + A_chunk7[j];
+			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk7[j];
 		else if (popcount_loop_P == 6)
-			AdderOut_A_D_N <= AdderOut_A_D_P + A_chunk6[j];
+			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk6[j];
 		else if (popcount_loop_P == 5)
-			AdderOut_A_D_N <= AdderOut_A_D_P + A_chunk5[j];
+			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk5[j];
 		else if (popcount_loop_P == 4)
-			AdderOut_A_D_N <= AdderOut_A_D_P + A_chunk4[j];
+			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk4[j];
 		else if (popcount_loop_P == 3)
-			AdderOut_A_D_N <= AdderOut_A_D_P + A_chunk3[j];
+			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk3[j];
 		else if (popcount_loop_P == 2)
-			AdderOut_A_D_N <= AdderOut_A_D_P + A_chunk2[j];
+			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk2[j];
 		else if (popcount_loop_P == 1)
-			AdderOut_A_D_N <= AdderOut_A_D_P + A_chunk1[j];
-		else if (popcount_loop_P == 0)
-			AdderOut_A_D_N <= AdderOut_A_D_P;
+			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk1[j];
+		//else if (popcount_loop_P == 0)
+		//	AdderOut_A_D_N = AdderOut_A_D_N;
 	end
 end
 
 integer y;
 always @(*) begin
 	for (y=0; y<`AM_CHUNK; y=y+1) begin
+		AdderOut_V_D_N = AdderOut_V_D_P;
 		if (popcount_loop_P == 8)
-			AdderOut_V_D_N <= AdderOut_V_D_P + A_chunk8[y];
+			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk8[y];
 		else if (popcount_loop_P == 7)
-			AdderOut_V_D_N <= AdderOut_V_D_P + A_chunk7[y];
+			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk7[y];
 		else if (popcount_loop_P == 6)
-			AdderOut_V_D_N <= AdderOut_V_D_P + A_chunk6[y];
+			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk6[y];
 		else if (popcount_loop_P == 5)
-			AdderOut_V_D_N <= AdderOut_V_D_P + A_chunk5[y];
+			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk5[y];
 		else if (popcount_loop_P == 4)
-			AdderOut_V_D_N <= AdderOut_V_D_P + A_chunk4[y];
+			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk4[y];
 		else if (popcount_loop_P == 3)
-			AdderOut_V_D_N <= AdderOut_V_D_P + A_chunk3[y];
+			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk3[y];
 		else if (popcount_loop_P == 2)
-			AdderOut_V_D_N <= AdderOut_V_D_P + A_chunk2[y];
+			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk2[y];
 		else if (popcount_loop_P == 1)
-			AdderOut_V_D_N <= AdderOut_V_D_P + A_chunk1[y];
-		else if (popcount_loop_P == 0)
-			AdderOut_V_D_N <= AdderOut_V_D_P;
+			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk1[y];
+		//else if (popcount_loop_P == 0)
+		//	AdderOut_V_D_N = AdderOut_V_D_N;
 	end
 end
 
