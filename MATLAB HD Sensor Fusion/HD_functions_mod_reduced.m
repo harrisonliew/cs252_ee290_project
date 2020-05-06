@@ -569,6 +569,7 @@ function [predict_hamm, error, second_error] = hamming (q, aM, classes)
 
     sims = [];
     am_index = 0;
+    
     for j = 1 : classes
         sims(j) = sum(xor(q,aM(am_index)));
         am_index = am_index + 1;

@@ -226,9 +226,9 @@ function randomHV = projItemMemeory (projM_pos, projM_neg, voffeature,ioffeature
 % OUTPUTS:
 %   randomHV    : return the related vector
 
-        if (voffeature > 0)
+        if (voffeature == 1)
             randomHV = projM_pos(ioffeature,:);
-        elseif (voffeature < 0)
+        elseif (voffeature == 2)
             randomHV = projM_neg(ioffeature,:);
         else
             randomHV = zeros(1,D);
@@ -322,7 +322,7 @@ function Ngram = computeNgramproj (buffer, CiM, N, precision, iM, channels,projM
  
 end
   
-function [numPat, AM] = hdctrainproj (labelTrainSet, trainSet, CiM, iM, D, N, precision, channels,projM_pos, projM_neg) 
+function [numPat, AM] = hdctrainproj (labelTrainSet, trainSet, CiM, iM, D, N, precision, channels,projM_pos, projM_neg, classes) 
 %
 % DESCRIPTION   : train an associative memory based on input training data
 %
@@ -342,10 +342,11 @@ function [numPat, AM] = hdctrainproj (labelTrainSet, trainSet, CiM, iM, D, N, pr
  
 	AM = containers.Map ('KeyType','double','ValueType','any');
 
-	
+	am_index = 0;
     for label = 1:1:max(labelTrainSet)
-    	AM (label) = zeros (1,D);
+    	AM (am_index) = zeros (1,D);
 	    numPat (label) = 0;
+        am_index = am_index+1;
     end
     trainVecList=zeros (1,D);
     i = 1;
@@ -360,7 +361,7 @@ function [numPat, AM] = hdctrainproj (labelTrainSet, trainSet, CiM, iM, D, N, pr
         %all modalities
 	    ngram = computeNgramproj (trainSet (i : i+N-1,:), CiM, N, precision, iM, channels,projM_pos, projM_neg,D);
             trainVecList = [trainVecList ; ngram];
-	        numPat (labelTrainSet (i+N-1)) = numPat (labelTrainSet (i+N-1)) + 1;
+	        %numPat (labelTrainSet (i+N-1)) = numPat (labelTrainSet (i+N-1)) + 1;
 
             i = i + 1;
         else
@@ -370,7 +371,7 @@ function [numPat, AM] = hdctrainproj (labelTrainSet, trainSet, CiM, iM, D, N, pr
             trainVecList(1 , :) = 3;
             AM (label) = mode (trainVecList);
             label = labelTrainSet(i);
-            numPat (label) = 0;
+            %numPat (label) = 0;
             trainVecList=zeros (1,D);
     
         end
@@ -380,9 +381,11 @@ function [numPat, AM] = hdctrainproj (labelTrainSet, trainSet, CiM, iM, D, N, pr
        l= length(labelTrainSet);
     end    
     %wrap up the last training class
-    AM (labelTrainSet (l)) = mode (trainVecList);   
-    for label = 1:1:max(labelTrainSet)
-		fprintf ('Class = %d \t sum = %.0f \t created \n', label, sum(AM(label)));
+    AM (labelTrainSet (l)) = mode (trainVecList);
+    am_index = 0;
+    for label = 1:1:classes
+		fprintf ('Class = %d \t sum = %.0f \t created \n', label, sum(AM(am_index)));
+        am_index = am_index + 1;
     end
 end
 
@@ -452,14 +455,20 @@ function [predict_hamm, error, second_error] = hamming (q, aM, classes)
 %
 
     sims = [];
+     am_index = 0;
      
     for j = 1 : classes
-        sims(j) = sum(xor(q,aM(j)));
+        sims(j) = sum(xor(q,aM(am_index)));
+        am_index = am_index + 1;
     end
     
     [error, indx]=min(sims');
     M=sort(sims);
     second_error=M(2);
-    predict_hamm=indx;
+    if indx == 1
+        predict_hamm=0;
+    else
+        predict_hamm=1;
+    end
      
 end

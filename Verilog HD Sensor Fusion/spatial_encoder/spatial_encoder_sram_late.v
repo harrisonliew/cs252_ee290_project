@@ -16,10 +16,6 @@ module spatial_encoder_sram_late
 	output [0:`HV_DIMENSION-1] HypervectorOut_mod1_DO, HypervectorOut_mod2_DO, HypervectorOut_mod3_DO,
 
 	//SRAM
-	//sram2 = projm1_neg, modality 1, projM_mod1_neg
-	//sram3 = projm1_pos, modality 1, projM_mod1_pos
-	//sram5 = projm2_neg, modality 2, projM_mod2_neg
-	//sram6 = projm2_pos, modality 2, projM_mod2_pos
 	//sram7 = iM3, modality 3, IMOut_mod3_D
 	//sram8 = projm3_neg, modality 3, projM_mod3_neg
 	//sram9 = projm3_pos, modality 3, projM_mod3_pos
@@ -33,8 +29,8 @@ module spatial_encoder_sram_late
 	input sram8_ready, sram8_valid,
 	input sram9_ready, sram9_valid,
 	input [0:`HV_DIMENSION-1] IMOut_mod3_D,
-	input [0:`HV_DIMENSION-1] projM_mod1_neg, projM_mod2_neg, projM_mod3_neg, 
-	input [0:`HV_DIMENSION-1] projM_mod1_pos, projM_mod2_pos, projM_mod3_pos,
+	input [0:`HV_DIMENSION-1] projM_mod3_neg, 
+	input [0:`HV_DIMENSION-1] projM_mod3_pos,
 	// spatial encoder ready and valid signals, 1 for each modality
 	output spatial_ready_1, spatial_ready_2, spatial_ready_3,
 	output spatial_valid_1, spatial_valid_2, spatial_valid_3,
@@ -131,8 +127,8 @@ spatial_accumulator Spat_Accum_mod1(
 	.store_second(store_second),
 	.FirstHypervector_SI(FirstHypervector_S),
 	.HypervectorIn_DI(IMOut_mod3_D),
-	.projM_negIN(projM_mod1_neg),
-	.projM_posIN(projM_mod1_pos),
+	.projM_negIN(projM_mod3_neg),
+	.projM_posIN(projM_mod3_pos),
 	.FeatureIn_DI(ChannelFeature_mod1_D),
 	.HypervectorOut_DO(HypervectorOut_mod1_DO)
 );
@@ -145,8 +141,8 @@ spatial_accumulator Spat_Accum_mod2(
 	.store_second(store_second),
 	.FirstHypervector_SI(FirstHypervector_S),
 	.HypervectorIn_DI(IMOut_mod3_D),
-	.projM_negIN(projM_mod2_neg),
-	.projM_posIN(projM_mod2_pos),
+	.projM_negIN(projM_mod3_neg),
+	.projM_posIN(projM_mod3_pos),
 	.FeatureIn_DI(ChannelFeature_mod2_D),
 	.HypervectorOut_DO(HypervectorOut_mod2_DO)
 );

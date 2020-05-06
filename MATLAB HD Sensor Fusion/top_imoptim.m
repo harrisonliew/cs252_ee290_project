@@ -72,10 +72,10 @@ channels_a_EXG=channels_a+channels_a_ECG+channels_a_EEG;
 %[chAM6, iMch6] = initItemMemories (D, maxL, channels_a_EEG);
 
 for i=1:1:channels_v_ECG
-    iMch3(i) = iMch5(i)
+    iMch3(i) = iMch5(i);
 end
 for i=1:1:channels_v
-    iMch1(i) = iMch5(i)
+    iMch1(i) = iMch5(i);
 end
 [chAM7, iMch7] = initItemMemories (D, maxL, channels_v_EXG);
 [chAM8, iMch8] = initItemMemories (D, maxL, channels_a_EXG);
@@ -185,6 +185,12 @@ projM3=projBRandomHV(D,channels_v_ECG,q);
 projM4=projBRandomHV(D,channels_a_ECG,q);
 projM5=projBRandomHV(D,channels_v_EEG,q);
 projM6=projBRandomHV(D,channels_a_EEG,q);
+for i=1:1:channels_v
+    projM1(i,:) = projM5(i,:);
+end
+for i=1:1:channels_v_ECG
+    projM3(i,:) = projM5(i,:);
+end
 projM1_neg = projM1;
 projM1_pos = projM1;
 projM1_neg(projM1_neg==-1) = 0;
@@ -223,17 +229,17 @@ N
 % Arousal
 %generate ngram bundles for each data stream
 fprintf ('HDC for A\n');
-%[numpat_2, hdc_model_2] = hdctrainproj (reduced_L_SAMPL_DATA_2, reduced_SAMPL_DATA_2, chAM8, iMch2, D, N, precision, channels_a,projM2_pos,projM2_neg); 
-%[numpat_4, hdc_model_4] = hdctrainproj (reduced_L_SAMPL_DATA_2, reduced_SAMPL_DATA_4, chAM8, iMch4, D, N, precision, channels_a_ECG,projM4_pos,projM4_neg); 
-%[numpat_6, hdc_model_6] = hdctrainproj (reduced_L_SAMPL_DATA_2, reduced_SAMPL_DATA_6, chAM8, iMch6, D, N, precision, channels_a_EEG,projM6_pos,projM6_neg); 
+%[numpat_2, hdc_model_2] = hdctrainproj (reduced_L_SAMPL_DATA_2, reduced_SAMPL_DATA_2, chAM8, iMch1, D, N, precision, channels_a,projM1_pos,projM1_neg, classes); 
+%[numpat_4, hdc_model_4] = hdctrainproj (reduced_L_SAMPL_DATA_2, reduced_SAMPL_DATA_4, chAM8, iMch3, D, N, precision, channels_a_ECG,projM3_pos,projM3_neg, classes); 
+%[numpat_6, hdc_model_6] = hdctrainproj (reduced_L_SAMPL_DATA_2, reduced_SAMPL_DATA_6, chAM8, iMch5, D, N, precision, channels_a_EEG,projM5_pos,projM5_neg, classes); 
 [numpat, hdc_model_2] = hdctrainproj (classes, reduced_L_SAMPL_DATA_2, reduced_L_SAMPL_DATA_2, reduced_L_SAMPL_DATA_2,reduced_SAMPL_DATA_2, reduced_SAMPL_DATA_4, reduced_SAMPL_DATA_6, chAM8, iMch1, iMch3, iMch5, D, N, precision, channels_a, channels_a_ECG, channels_a_EEG,projM1_pos, projM1_neg, projM3_pos, projM3_neg, projM5_pos, projM5_neg); 
 
 %uncomment following for late fusion
 %bundle all the sensors (this is the fusion point)
 % %class 1
-%hdc_model_2(1)=mode([hdc_model_2(1); hdc_model_4(1); hdc_model_6(1)]);
+%hdc_model_2(0)=mode([hdc_model_2(0); hdc_model_4(0); hdc_model_6(0)]);
 % %class 2
-%hdc_model_2(2)=mode([hdc_model_2(2); hdc_model_4(2); hdc_model_6(2)]);
+%hdc_model_2(1)=mode([hdc_model_2(1); hdc_model_4(1); hdc_model_6(1)]);
 
 %for i=1:channels_a
 %iMch8(i)=iMch2(i);
@@ -257,16 +263,16 @@ acc_ngram_A(N,j)=acc2;
 % Valence
 
 fprintf ('HDC for V\n');
- %[numpat_1, hdc_model_1] = hdctrainproj (reduced_L_SAMPL_DATA_1, reduced_SAMPL_DATA_1, chAM8, iMch1, D, N, precision, channels_v,projM1_pos,projM1_neg); 
- %[numpat_3, hdc_model_3] = hdctrainproj (reduced_L_SAMPL_DATA_1, reduced_SAMPL_DATA_3, chAM8, iMch3, D, N, precision, channels_v_ECG,projM3_pos,projM3_neg); 
- %[numpat_5, hdc_model_5] = hdctrainproj (reduced_L_SAMPL_DATA_1, reduced_SAMPL_DATA_5, chAM8, iMch5, D, N, precision, channels_v_EEG,projM5_pos,projM5_neg); 
+ %[numpat_1, hdc_model_1] = hdctrainproj (reduced_L_SAMPL_DATA_1, reduced_SAMPL_DATA_1, chAM8, iMch1, D, N, precision, channels_v,projM1_pos,projM1_neg, classes); 
+ %[numpat_3, hdc_model_3] = hdctrainproj (reduced_L_SAMPL_DATA_1, reduced_SAMPL_DATA_3, chAM8, iMch3, D, N, precision, channels_v_ECG,projM3_pos,projM3_neg, classes); 
+ %[numpat_5, hdc_model_5] = hdctrainproj (reduced_L_SAMPL_DATA_1, reduced_SAMPL_DATA_5, chAM8, iMch5, D, N, precision, channels_v_EEG,projM5_pos,projM5_neg, classes); 
  [numpat, hdc_model_1] = hdctrainproj (classes, reduced_L_SAMPL_DATA_1, reduced_L_SAMPL_DATA_1, reduced_L_SAMPL_DATA_1,reduced_SAMPL_DATA_1, reduced_SAMPL_DATA_3, reduced_SAMPL_DATA_5, chAM8, iMch1, iMch3, iMch5, D, N, precision, channels_v, channels_v_ECG, channels_v_EEG,projM1_pos,projM1_neg, projM3_pos,projM3_neg, projM5_pos,projM5_neg); 
 
 
 %class 1
-%hdc_model_1(1)=mode([hdc_model_1(1); hdc_model_3(1); hdc_model_5(1)]);
+%hdc_model_1(0)=mode([hdc_model_1(0); hdc_model_3(0); hdc_model_5(0)]);
 %class 2
-%hdc_model_1(2)=mode([hdc_model_1(2); hdc_model_3(2); hdc_model_5(2)]);
+%hdc_model_1(1)=mode([hdc_model_1(1); hdc_model_3(1); hdc_model_5(1)]);
 
 %for i=1:channels_v
 %iMch7(i)=iMch1(i);
@@ -309,18 +315,18 @@ for i = 1:1:iMch5.Count
 end
 
 projM_pos_full = [];
-projM_pos_temp = [projM1_pos; projM3_pos; projM5_pos];
-x = size(projM_pos_temp);
+%projM_pos_temp = [projM1_pos; projM3_pos; projM5_pos];
+x = size(projM5_pos);
 dim = x(1);
 for i = 1:1:dim
-    projM_pos_full = [projM_pos_full projM_pos_temp(i,:)]; %#ok<AGROW>
+    projM_pos_full = [projM_pos_full projM5_pos(i,:)]; %#ok<AGROW>
 end
 
 projM_neg_full = [];
-projM_neg_temp = [projM1_neg; projM3_neg; projM5_neg];
-x = size(projM_neg_temp);
+%projM_neg_temp = [projM1_neg; projM3_neg; projM5_neg];
+x = size(projM5_neg);
 dim = x(1);
 for i = 1:1:dim
-    projM_neg_full = [projM_neg_full projM_neg_temp(i,:)]; %#ok<AGROW>
+    projM_neg_full = [projM_neg_full projM5_neg(i,:)]; %#ok<AGROW>
 end
 
