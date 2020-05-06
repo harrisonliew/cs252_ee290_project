@@ -96,7 +96,7 @@ end
 always @(*) begin
 	if (ShiftComplete_S && ShiftMemoryEN_S)
 		AM_A_class_N <= AM_A_class1;
-	else begin
+	else if (ShiftMemoryEN_S) begin
 		if ((ShiftCntr_SP-1) == 1'b1)
 			AM_A_class_N <= AM_A_class1;
 		else
@@ -110,7 +110,7 @@ end
 always @(*) begin
 	if (ShiftComplete_S && ShiftMemoryEN_S)
 		AM_V_class_N <= AM_V_class1;
-	else begin
+	else if (ShiftMemoryEN_S) begin
 		if ((ShiftCntr_SP-1) == 1'b1)
 			AM_V_class_N <= AM_V_class1;
 		else
