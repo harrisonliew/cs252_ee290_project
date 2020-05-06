@@ -60,7 +60,7 @@ reg [`DISTANCE_WIDTH-1:0] DistanceOut;
 
 spatial_encoder_sram spatial_encoder_mod1(
 	.Clk_CI           (Clk_CI),
-	.Reset_RI         (~Reset_RI),
+	.Reset_RI         (Reset_RI),
 
 	.ValidIn_SI    	  (ValidIn_SI),
 	.ReadyOut_SO   	  (ReadyOut_SO),
@@ -105,7 +105,7 @@ spatial_encoder_sram spatial_encoder_mod1(
 
 temporal_encoder temporal_encoder(
 	.Clk_CI           (Clk_CI),
-	.Reset_RI         (~Reset_RI),
+	.Reset_RI         (Reset_RI),
 
 	.ValidIn_SI    	  (Valid_ST),
 	.ReadyOut_SO   	  (Ready_ST),
@@ -120,7 +120,7 @@ temporal_encoder temporal_encoder(
 
 associative_memory associative_memory(
 	.Clk_CI          (Clk_CI),
-	.Reset_RI        (~Reset_RI),
+	.Reset_RI        (Reset_RI),
 
 	.ValidIn_SI      (Valid_TA),
 	.ReadyOut_SO     (Ready_TA),
