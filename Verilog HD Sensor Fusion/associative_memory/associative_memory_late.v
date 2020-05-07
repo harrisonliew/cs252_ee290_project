@@ -89,7 +89,7 @@ wire [0:`AM_CHUNK-1] V_chunk1, V_chunk2, V_chunk3, V_chunk4, V_chunk5, V_chunk6,
 //Set next input data
 genvar k;
 for (k=0; k<`HV_DIMENSION; k=k+1) begin
-	assign QueryHypervector_DN[k]  = (QueryHypervectorEN_S) ? (HypervectorIn_mod1_DI[k] && HypervectorIn_mod2_DI[k]) || (HypervectorIn_mod1_DI[k] && HypervectorIn_mod3_DI[k]) || (HypervectorIn_mod2_DI[k] && HypervectorIn_mod3_DI[k]) : QueryHypervector_DP[k];
+	assign QueryHypervector_DN[k]  = (HypervectorIn_mod1_DI[k] && HypervectorIn_mod2_DI[k]) || (HypervectorIn_mod1_DI[k] && HypervectorIn_mod3_DI[k]) || (HypervectorIn_mod2_DI[k] && HypervectorIn_mod3_DI[k]);
 end
 
 //reg [0:`HV_DIMENSION-1] next_A_class, next_V_class;
@@ -226,21 +226,21 @@ end
 
 //comparison
 //Comparator Registers
-assign CompLabel_A_DN = (CompRegisterSEN_A_S && CompRegisterEN_S) ? (ShiftCntr_SP-1) : CompLabel_A_DP;
-assign CompDistance_A_DN = (CompRegisterSEN_A_S && CompRegisterEN_S) ? AdderOut_A_D_P : CompDistance_A_DP;
+assign CompLabel_A_DN = ShiftCntr_SP-1;
+assign CompDistance_A_DN = AdderOut_A_D_P;
 
-assign CompLabel_V_DN = (CompRegisterSEN_V_S && CompRegisterEN_S) ? (ShiftCntr_SP-1) : CompLabel_V_DP;
-assign CompDistance_V_DN = (CompRegisterSEN_V_S && CompRegisterEN_S) ? AdderOut_V_D_P : CompDistance_V_DP;
+assign CompLabel_V_DN = ShiftCntr_SP-1;
+assign CompDistance_V_DN = AdderOut_V_D_P;
 
 // Comparison
-assign CompRegisterSEN_A_S = AdderOut_A_D_P < CompDistance_A_DP;
-assign CompRegisterSEN_V_S = AdderOut_V_D_P < CompDistance_V_DP;
+assign CompRegisterSEN_A_S = CompDistance_A_DN < CompDistance_A_DP;
+assign CompRegisterSEN_V_S = CompDistance_V_DN < CompDistance_V_DP;
 
 //Output Buffers
-assign LabelOut_A_DN = (OutputBuffersEN_S) ? CompLabel_A_DP : LabelOut_A_DP;
-assign DistanceOut_A_DN = (OutputBuffersEN_S) ? CompDistance_A_DP: DistanceOut_A_DP;
-assign LabelOut_V_DN = (OutputBuffersEN_S) ? CompLabel_V_DP : LabelOut_V_DP;
-assign DistanceOut_V_DN = (OutputBuffersEN_S) ? CompDistance_V_DP: DistanceOut_V_DP;
+assign LabelOut_A_DN = CompLabel_A_DP;
+assign DistanceOut_A_DN = CompDistance_A_DP;
+assign LabelOut_V_DN = CompLabel_V_DP;
+assign DistanceOut_V_DN = CompDistance_V_DP;
 
 //output signals
 assign LabelOut_A_DO = LabelOut_A_DP;
@@ -249,7 +249,7 @@ assign LabelOut_V_DO = LabelOut_V_DP;
 assign DistanceOut_V_DO = DistanceOut_V_DP;
 
 // Shift counter
-assign ShiftCntr_SN = (ShiftCntrEN_S) ? (ShiftCntr_SP - 1) : ShiftCntr_SP;
+assign ShiftCntr_SN = ShiftCntr_SP - 1;
 assign ShiftComplete_S = ~|ShiftCntr_SP;
 
 //loop counter
@@ -319,11 +319,17 @@ always @ (posedge Clk_CI) begin
     	DistanceOut_A_DP <= {`DISTANCE_WIDTH{1'b0}};
     	DistanceOut_V_DP <= {`DISTANCE_WIDTH{1'b0}};
 	end 
-	else begin
+	else if (OutputBuffersEN_S) begin
 		LabelOut_A_DP  <= LabelOut_A_DN;
 		LabelOut_V_DP  <= LabelOut_V_DN;
     	DistanceOut_A_DP <= DistanceOut_A_DN;
     	DistanceOut_V_DP <= DistanceOut_V_DN;
+	end
+	else begin
+		LabelOut_A_DP  <= LabelOut_A_DP;
+		LabelOut_V_DP  <= LabelOut_V_DP;
+    	DistanceOut_A_DP <= DistanceOut_A_DP;
+    	DistanceOut_V_DP <= DistanceOut_V_DP;
 	end
 end
 
@@ -361,8 +367,11 @@ end
 always @ (posedge Clk_CI) begin
 	if (Reset_RI) 
 		QueryHypervector_DP <= {`HV_DIMENSION{1'b0}};
-	else
+	else if (QueryHypervectorEN_S)
 		QueryHypervector_DP <= QueryHypervector_DN;
+	else begin
+		QueryHypervector_DP <= QueryHypervector_DP;
+	end
 end
 
 // comparator registers
@@ -373,11 +382,19 @@ always @ (posedge Clk_CI) begin
     	CompLabel_A_DP <= {`LABEL_WIDTH{1'b0}};
     	CompLabel_V_DP <= {`LABEL_WIDTH{1'b0}};
 	end 
-	else begin
+	else if (CompRegisterSEN_A_S && CompRegisterEN_S) begin
 		CompDistance_A_DP <= CompDistance_A_DN;
 		CompLabel_A_DP <= CompLabel_A_DN;
+	end
+	else if (CompRegisterSEN_V_S && CompRegisterEN_S) begin
 		CompDistance_V_DP <= CompDistance_V_DN;
     	CompLabel_V_DP <= CompLabel_V_DN;
+    end
+    else begin
+    	CompDistance_A_DP <= CompDistance_A_DP;
+		CompDistance_V_DP <= CompDistance_V_DP;
+    	CompLabel_A_DP <= CompLabel_A_DP;
+    	CompLabel_V_DP <= CompLabel_V_DP;
     end
 end
 
@@ -385,8 +402,10 @@ end
 always @ (posedge Clk_CI) begin
 	if (Reset_RI || ShiftCntrCLR_S)
 		ShiftCntr_SP <= `CLASSES;
-	else
+	else if (ShiftCntrEN_S)
 		ShiftCntr_SP <= ShiftCntr_SN;
+	else
+		ShiftCntr_SP <= ShiftCntr_SP;
 end
 
 // rotating memory counter register
@@ -409,7 +428,6 @@ always @ (posedge Clk_CI) begin
 end 
 
 endmodule
-
 
 
 
