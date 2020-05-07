@@ -165,7 +165,7 @@ assign V_chunk8 = SimilarityOut_V_D[`AM_CHUNK*7:`AM_CHUNK*8-1];
 integer j;
 always @(*) begin
 	for (j=0; j<`AM_CHUNK; j=j+1) begin
-		if (popcount_enable) begin
+		//if (popcount_enable) begin
 			if (popcount_loop_P == 8)
 				AdderOut_A_D_N = AdderOut_A_D_N + A_chunk8[j];
 			else if (popcount_loop_P == 7)
@@ -187,17 +187,17 @@ always @(*) begin
 			end
 		//else if (popcount_loop_P == 0)
 		//	AdderOut_A_D_N = AdderOut_A_D_N;
-		end
-		else begin
-			AdderOut_A_D_N = AdderOut_A_D_P;
-		end
+		//end
+		//else begin
+		//	AdderOut_A_D_N = AdderOut_A_D_P;
+		//end
 	end
 end
 
 integer y;
 always @(*) begin
 	for (y=0; y<`AM_CHUNK; y=y+1) begin
-		if (popcount_enable) begin
+		//if (popcount_enable) begin
 			if (popcount_loop_P == 8)
 				AdderOut_V_D_N = AdderOut_V_D_N + A_chunk8[y];
 			else if (popcount_loop_P == 7)
@@ -217,10 +217,10 @@ always @(*) begin
 			else begin
 				AdderOut_V_D_N = AdderOut_V_D_P;
 			end
-		end
-		else begin
-			AdderOut_V_D_N = AdderOut_V_D_P;
-		end
+		//end
+		//else begin
+		//	AdderOut_V_D_N = AdderOut_V_D_P;
+		//end
 		//else if (popcount_loop_P == 0)
 		//	AdderOut_V_D_N = AdderOut_V_D_N;
 	end
@@ -255,7 +255,7 @@ assign ShiftCntr_SN = (ShiftCntrEN_S) ? (ShiftCntr_SP - 1) : ShiftCntr_SP;
 assign ShiftComplete_S = ~|ShiftCntr_SP;
 
 //loop counter
-assign popcount_loop_N = (popcount_enable) ? (popcount_loop_P - 1) : popcount_loop_P;
+assign popcount_loop_N = popcount_loop_P - 1;
 assign popcount_complete = ~|popcount_loop_P;
 
 //FSM
@@ -349,9 +349,13 @@ always @(posedge Clk_CI) begin
 		AdderOut_A_D_P = {`DISTANCE_WIDTH{1'b0}};
 		AdderOut_V_D_P = {`DISTANCE_WIDTH{1'b0}};
 	end
-	else begin
+	else if (popcount_enable) begin
 		AdderOut_A_D_P = AdderOut_A_D_N;
 		AdderOut_V_D_P = AdderOut_V_D_N;
+	end
+	else begin
+		AdderOut_A_D_P = AdderOut_A_D_P;
+		AdderOut_V_D_P = AdderOut_V_D_P;
 	end
 end
 
@@ -391,8 +395,11 @@ end
 always @ (posedge Clk_CI) begin
 	if (Reset_RI || pop_clear)
 		popcount_loop_P <= `AM_CYCLELOOP;
-	else
+	else (if popcount_enable)
 		popcount_loop_P <= popcount_loop_N;
+	else begin
+		popcount_loop_P <= popcount_loop_P;
+	end
 end
 
 // FSM transition register
