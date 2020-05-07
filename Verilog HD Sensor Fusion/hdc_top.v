@@ -118,7 +118,7 @@ temporal_encoder temporal_encoder(
 	.HypervectorOut_DO(Hypervector_TA)
 	);
 
-associative_memory associative_memory(
+associative_memory_basic associative_memory(
 	.Clk_CI          (Clk_CI),
 	.Reset_RI        (Reset_RI),
 
