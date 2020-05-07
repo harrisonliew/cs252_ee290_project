@@ -92,7 +92,7 @@ wire [0:`AM_CHUNK-1] V_chunk1, V_chunk2, V_chunk3, V_chunk4, V_chunk5, V_chunk6,
 //	assign QueryHypervector_DN[k]  = (HypervectorIn_mod1_DI[k] && HypervectorIn_mod2_DI[k]) || (HypervectorIn_mod1_DI[k] && HypervectorIn_mod3_DI[k]) || (HypervectorIn_mod2_DI[k] && HypervectorIn_mod3_DI[k]);
 //end
 
-assign QueryHypervector_DN = HypervectorIn_DI;
+assign QueryHypervector_DN = (QueryHypervectorEN_S) ? HypervectorIn_DI : QueryHypervector_DP;
 
 //reg [0:`HV_DIMENSION-1] next_A_class, next_V_class;
 always @(*) begin
@@ -122,7 +122,6 @@ always @(*) begin
 		AM_V_class_N <= AM_V_class_P;
 	end
 end
-
 
 
 //assign shift_start = (ShiftCntr_SP-1)*`HV_DIMENSION;
@@ -166,48 +165,62 @@ assign V_chunk8 = SimilarityOut_V_D[`AM_CHUNK*7:`AM_CHUNK*8-1];
 integer j;
 always @(*) begin
 	for (j=0; j<`AM_CHUNK; j=j+1) begin
-		AdderOut_A_D_N = AdderOut_A_D_P;
-		if (popcount_loop_P == 8)
-			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk8[j];
-		else if (popcount_loop_P == 7)
-			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk7[j];
-		else if (popcount_loop_P == 6)
-			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk6[j];
-		else if (popcount_loop_P == 5)
-			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk5[j];
-		else if (popcount_loop_P == 4)
-			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk4[j];
-		else if (popcount_loop_P == 3)
-			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk3[j];
-		else if (popcount_loop_P == 2)
-			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk2[j];
-		else if (popcount_loop_P == 1)
-			AdderOut_A_D_N = AdderOut_A_D_N + A_chunk1[j];
+		if (popcount_enable) begin
+			if (popcount_loop_P == 8)
+				AdderOut_A_D_N = AdderOut_A_D_N + A_chunk8[j];
+			else if (popcount_loop_P == 7)
+				AdderOut_A_D_N = AdderOut_A_D_N + A_chunk7[j];
+			else if (popcount_loop_P == 6)
+				AdderOut_A_D_N = AdderOut_A_D_N + A_chunk6[j];
+			else if (popcount_loop_P == 5)
+				AdderOut_A_D_N = AdderOut_A_D_N + A_chunk5[j];
+			else if (popcount_loop_P == 4)
+				AdderOut_A_D_N = AdderOut_A_D_N + A_chunk4[j];
+			else if (popcount_loop_P == 3)
+				AdderOut_A_D_N = AdderOut_A_D_N + A_chunk3[j];
+			else if (popcount_loop_P == 2)
+				AdderOut_A_D_N = AdderOut_A_D_N + A_chunk2[j];
+			else if (popcount_loop_P == 1)
+				AdderOut_A_D_N = AdderOut_A_D_N + A_chunk1[j];
+			else begin
+				AdderOut_A_D_N = AdderOut_A_D_P;
+			end
 		//else if (popcount_loop_P == 0)
 		//	AdderOut_A_D_N = AdderOut_A_D_N;
+		end
+		else begin
+			AdderOut_A_D_N = AdderOut_A_D_P;
+		end
 	end
 end
 
 integer y;
 always @(*) begin
 	for (y=0; y<`AM_CHUNK; y=y+1) begin
-		AdderOut_V_D_N = AdderOut_V_D_P;
-		if (popcount_loop_P == 8)
-			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk8[y];
-		else if (popcount_loop_P == 7)
-			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk7[y];
-		else if (popcount_loop_P == 6)
-			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk6[y];
-		else if (popcount_loop_P == 5)
-			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk5[y];
-		else if (popcount_loop_P == 4)
-			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk4[y];
-		else if (popcount_loop_P == 3)
-			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk3[y];
-		else if (popcount_loop_P == 2)
-			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk2[y];
-		else if (popcount_loop_P == 1)
-			AdderOut_V_D_N = AdderOut_V_D_N + A_chunk1[y];
+		if (popcount_enable) begin
+			if (popcount_loop_P == 8)
+				AdderOut_V_D_N = AdderOut_V_D_N + A_chunk8[y];
+			else if (popcount_loop_P == 7)
+				AdderOut_V_D_N = AdderOut_V_D_N + A_chunk7[y];
+			else if (popcount_loop_P == 6)
+				AdderOut_V_D_N = AdderOut_V_D_N + A_chunk6[y];
+			else if (popcount_loop_P == 5)
+				AdderOut_V_D_N = AdderOut_V_D_N + A_chunk5[y];
+			else if (popcount_loop_P == 4)
+				AdderOut_V_D_N = AdderOut_V_D_N + A_chunk4[y];
+			else if (popcount_loop_P == 3)
+				AdderOut_V_D_N = AdderOut_V_D_N + A_chunk3[y];
+			else if (popcount_loop_P == 2)
+				AdderOut_V_D_N = AdderOut_V_D_N + A_chunk2[y];
+			else if (popcount_loop_P == 1)
+				AdderOut_V_D_N = AdderOut_V_D_N + A_chunk1[y];
+			else begin
+				AdderOut_V_D_N = AdderOut_V_D_P;
+			end
+		end
+		else begin
+			AdderOut_V_D_N = AdderOut_V_D_P;
+		end
 		//else if (popcount_loop_P == 0)
 		//	AdderOut_V_D_N = AdderOut_V_D_N;
 	end
@@ -215,21 +228,21 @@ end
 
 //comparison
 //Comparator Registers
-assign CompLabel_A_DN = ShiftCntr_SP-1;
-assign CompDistance_A_DN = AdderOut_A_D_P;
+assign CompLabel_A_DN = (CompRegisterSEN_A_S && CompRegisterEN_S) ? (ShiftCntr_SP-1) : CompLabel_A_DP;
+assign CompDistance_A_DN = (CompRegisterSEN_A_S && CompRegisterEN_S) ? AdderOut_A_D_P : CompDistance_A_DP;
 
-assign CompLabel_V_DN = ShiftCntr_SP-1;
-assign CompDistance_V_DN = AdderOut_V_D_P;
+assign CompLabel_V_DN = (CompRegisterSEN_V_S && CompRegisterEN_S) ? (ShiftCntr_SP-1) : CompLabel_V_DP;
+assign CompDistance_V_DN = (CompRegisterSEN_V_S && CompRegisterEN_S) ? AdderOut_V_D_P : CompDistance_V_DP;
 
 // Comparison
 assign CompRegisterSEN_A_S = CompDistance_A_DN < CompDistance_A_DP;
 assign CompRegisterSEN_V_S = CompDistance_V_DN < CompDistance_V_DP;
 
 //Output Buffers
-assign LabelOut_A_DN = CompLabel_A_DP;
-assign DistanceOut_A_DN = CompDistance_A_DP;
-assign LabelOut_V_DN = CompLabel_V_DP;
-assign DistanceOut_V_DN = CompDistance_V_DP;
+assign LabelOut_A_DN = (OutputBuffersEN_S) ? CompLabel_A_DP : LabelOut_A_DP;
+assign DistanceOut_A_DN = (OutputBuffersEN_S) ? CompDistance_A_DP: DistanceOut_A_DP;
+assign LabelOut_V_DN = (OutputBuffersEN_S) ? CompLabel_V_DP : LabelOut_V_DP;
+assign DistanceOut_V_DN = (OutputBuffersEN_S) ? CompDistance_V_DP: DistanceOut_V_DP;
 
 //output signals
 assign LabelOut_A_DO = LabelOut_A_DP;
@@ -238,11 +251,11 @@ assign LabelOut_V_DO = LabelOut_V_DP;
 assign DistanceOut_V_DO = DistanceOut_V_DP;
 
 // Shift counter
-assign ShiftCntr_SN = ShiftCntr_SP - 1;
+assign ShiftCntr_SN = (ShiftCntrEN_S) ? (ShiftCntr_SP - 1) : ShiftCntr_SP;
 assign ShiftComplete_S = ~|ShiftCntr_SP;
 
 //loop counter
-assign popcount_loop_N = popcount_loop_P - 1;
+assign popcount_loop_N = (popcount_enable) ? (popcount_loop_P - 1) : popcount_loop_P;
 assign popcount_complete = ~|popcount_loop_P;
 
 //FSM
@@ -307,7 +320,8 @@ always @ (posedge Clk_CI) begin
 		LabelOut_V_DP  <= {`LABEL_WIDTH{1'b0}};
     	DistanceOut_A_DP <= {`DISTANCE_WIDTH{1'b0}};
     	DistanceOut_V_DP <= {`DISTANCE_WIDTH{1'b0}};
-	end else if (OutputBuffersEN_S) begin
+	end 
+	else begin
 		LabelOut_A_DP  <= LabelOut_A_DN;
 		LabelOut_V_DP  <= LabelOut_V_DN;
     	DistanceOut_A_DP <= DistanceOut_A_DN;
@@ -335,7 +349,7 @@ always @(posedge Clk_CI) begin
 		AdderOut_A_D_P = {`DISTANCE_WIDTH{1'b0}};
 		AdderOut_V_D_P = {`DISTANCE_WIDTH{1'b0}};
 	end
-	else if (popcount_enable == 1'b1) begin
+	else begin
 		AdderOut_A_D_P = AdderOut_A_D_N;
 		AdderOut_V_D_P = AdderOut_V_D_N;
 	end
@@ -345,7 +359,7 @@ end
 always @ (posedge Clk_CI) begin
 	if (Reset_RI) 
 		QueryHypervector_DP <= {`HV_DIMENSION{1'b0}};
-	else if (QueryHypervectorEN_S)
+	else
 		QueryHypervector_DP <= QueryHypervector_DN;
 end
 
@@ -356,23 +370,20 @@ always @ (posedge Clk_CI) begin
 		CompDistance_V_DP <= {`DISTANCE_WIDTH{1'b1}};
     	CompLabel_A_DP <= {`LABEL_WIDTH{1'b0}};
     	CompLabel_V_DP <= {`LABEL_WIDTH{1'b0}};
-	end else if (CompRegisterEN_S) begin
-		if (CompRegisterSEN_A_S) begin
-			CompDistance_A_DP <= CompDistance_A_DN;
-			CompLabel_A_DP <= CompLabel_A_DN;
-		end
-		if (CompRegisterSEN_V_S) begin
-			CompDistance_V_DP <= CompDistance_V_DN;
-    		CompLabel_V_DP <= CompLabel_V_DN;
-    	end
-	end
+	end 
+	else begin
+		CompDistance_A_DP <= CompDistance_A_DN;
+		CompLabel_A_DP <= CompLabel_A_DN;
+		CompDistance_V_DP <= CompDistance_V_DN;
+    	CompLabel_V_DP <= CompLabel_V_DN;
+    end
 end
 
 // rotating memory counter register
 always @ (posedge Clk_CI) begin
 	if (Reset_RI || ShiftCntrCLR_S)
 		ShiftCntr_SP <= `CLASSES;
-	else if (ShiftCntrEN_S)
+	else
 		ShiftCntr_SP <= ShiftCntr_SN;
 end
 
@@ -380,7 +391,7 @@ end
 always @ (posedge Clk_CI) begin
 	if (Reset_RI || pop_clear)
 		popcount_loop_P <= `AM_CYCLELOOP;
-	else if (popcount_enable)
+	else
 		popcount_loop_P <= popcount_loop_N;
 end
 
@@ -393,7 +404,6 @@ always @ (posedge Clk_CI) begin
 end 
 
 endmodule
-
 
 
 
