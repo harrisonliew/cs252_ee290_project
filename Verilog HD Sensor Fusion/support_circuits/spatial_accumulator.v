@@ -33,7 +33,7 @@ module spatial_accumulator
 
 	//define based on combinatorially defined logic
 	assign XOR_output = bit_by_bit; 
-	assign mod_second_channel_N = (store_second && Enable_SI) ? XOR_output : mod_second_channel_P;
+	assign mod_second_channel_N = XOR_output;
 	localparam sub_2 = `SPATIAL_WIDTH-2;
 	localparam sub_1 = `SPATIAL_WIDTH-1;
 	localparam sub_7 = `SPATIAL_WIDTH-7;
@@ -86,14 +86,20 @@ module spatial_accumulator
 			for (i=0; i<`SPATIAL_DIMENSION; i=i+1) Accumulator_DP[i] = {`SPATIAL_WIDTH{1'b0}};
 		else if (Enable_SI)
 			for (i=0; i<`SPATIAL_DIMENSION; i=i+1) Accumulator_DP[i] = Accumulator_DN[i];
+		else begin
+			for (i=0; i<`SPATIAL_DIMENSION; i=i+1) Accumulator_DP[i] = Accumulator_DP[i];
+		end
 	end
 
 	// store second channel reg
 	always @(posedge Clk_CI) begin
 		if (Reset_RI)
 			mod_second_channel_P = {`SPATIAL_DIMENSION{1'b0}};
-		else 
+		else if (store_second && Enable_SI)
 			mod_second_channel_P = mod_second_channel_N;
+		else begin
+			mod_second_channel_P = mod_second_channel_P;
+		end
 	end
 
 endmodule

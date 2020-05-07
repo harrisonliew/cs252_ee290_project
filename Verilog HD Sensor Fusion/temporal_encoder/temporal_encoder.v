@@ -31,10 +31,10 @@ integer i, sum;
 genvar y;
 
 //NGram permutation
-assign NGram_DN[1] = (NGramEN_S) ? {HypervectorIn_DI[`HV_DIMENSION-1], HypervectorIn_DI[0:`HV_DIMENSION-2]} : NGram_DP[1];
+assign NGram_DN[1] = {HypervectorIn_DI[`HV_DIMENSION-1], HypervectorIn_DI[0:`HV_DIMENSION-2]};
 generate 
   for (y=2; y<`NGRAM_SIZE; y=y+1) begin
-      assign NGram_DN[y] = (NGramEN_S) ? {NGram_DP[y-1][`HV_DIMENSION-1], NGram_DP[y-1][0:`HV_DIMENSION-2]} : NGram_DP[y];
+      assign NGram_DN[y] = {NGram_DP[y-1][`HV_DIMENSION-1], NGram_DP[y-1][0:`HV_DIMENSION-2]};
   end
 endgenerate
 
@@ -43,15 +43,10 @@ assign HypervectorOut_DO = result_P;
 
 //NGram binding
 always @ (*) begin
-  if (NGramEN_S) begin
     result_N = HypervectorIn_DI;
     for (i=1; i<`NGRAM_SIZE; i=i+1) begin
       result_N = result_N ^ NGram_DP[i];
     end
-  end
-  else begin
-    result_N = result_P;
-  end
 end
 
 //FSM
@@ -85,8 +80,11 @@ always @ (posedge Clk_CI) begin
   if (Reset_RI == 1'b1) begin
     for (i=1; i < `NGRAM_SIZE; i=i+1) NGram_DP[i] <= {`HV_DIMENSION{1'b0}};
   end 
-  else begin
+  else if (NGramEN_S) begin
     for (i=1; i < `NGRAM_SIZE; i=i+1) NGram_DP[i] <= NGram_DN[i];
+  end
+  else begin
+    for (i=1; i < `NGRAM_SIZE; i=i+1) NGram_DP[i] <= NGram_DP[i];
   end
 end
 
@@ -95,8 +93,11 @@ always @ (posedge Clk_CI) begin
   if (Reset_RI == 1'b1) begin
     result_P = {`HV_DIMENSION{1'b0}};
   end
-  else begin
+  else if (NGramEN_S) begin
     result_P = result_N;
+  end
+  else begin
+    result_P = result_P;
   end
 end
 

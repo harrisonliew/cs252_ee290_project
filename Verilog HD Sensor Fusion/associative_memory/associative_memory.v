@@ -96,25 +96,17 @@ assign QueryHypervector_DN = HypervectorIn_DI;
 
 //reg [0:`HV_DIMENSION-1] next_A_class, next_V_class;
 always @(*) begin
-	if (ShiftComplete_S)
-		AM_A_class_N <= AM_A_class1;
-	else begin
 		if ((ShiftCntr_SP-1) == 1'b1)
 			AM_A_class_N <= AM_A_class1;
 		else
 			AM_A_class_N <= AM_A_class0;
-	end
 end
 
 always @(*) begin
-	if (ShiftComplete_S)
-		AM_V_class_N <= AM_V_class1;
-	else begin
 		if ((ShiftCntr_SP-1) == 1'b1)
 			AM_V_class_N <= AM_V_class1;
 		else
 			AM_V_class_N <= AM_V_class0;
-	end
 end
 
 
@@ -331,7 +323,7 @@ end
 
 //AM class 
 always @(posedge Clk_CI) begin
-	if (Reset_RI||ShiftCntrCLR_S) 
+	if (Reset_RI||ShiftCntrCLR_S||ShiftComplete_S) 
 		AM_A_class_P = AM_A_class1;
 	else if (ShiftMemoryEN_S)
 		AM_A_class_P = AM_A_class_N;
@@ -341,7 +333,7 @@ always @(posedge Clk_CI) begin
 end
 
 always @(posedge Clk_CI) begin
-	if (Reset_RI||ShiftCntrCLR_S) 
+	if (Reset_RI||ShiftCntrCLR_S||ShiftComplete_S) 
 		AM_V_class_P = AM_V_class1;
 	else if (ShiftMemoryEN_S)
 		AM_V_class_P = AM_V_class_N;
