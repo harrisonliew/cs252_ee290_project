@@ -43,7 +43,7 @@ assign HypervectorOut_DO = result_P;
 
 //NGram binding
 always @ (*) begin
-  if (NGramEN_S)
+  if (NGramEN_S) begin
     result_N = HypervectorIn_DI;
     for (i=1; i<`NGRAM_SIZE; i=i+1) begin
       result_N = result_N ^ NGram_DP[i];
