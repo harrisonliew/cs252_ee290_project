@@ -24,14 +24,16 @@ module spatial_accumulator
 	reg [`SPATIAL_WIDTH-1:0] Accumulator_DN [0:`SPATIAL_DIMENSION-1];
 	wire [0:`SPATIAL_DIMENSION-1] XOR_output;
 	reg [0:`SPATIAL_DIMENSION-1] bit_by_bit;
-	reg [0:`SPATIAL_DIMENSION-1] mod_second_channel;
+	reg [0:`SPATIAL_DIMENSION-1] mod_second_channel_P;
+	wire [0:`SPATIAL_DIMENSION-1] mod_second_channel_N;
 	wire [0:`SPATIAL_DIMENSION-1] xor_final_channel;
 
 
-	assign xor_final_channel = mod_second_channel ^ HypervectorIn_DI;
+	assign xor_final_channel = mod_second_channel_P ^ HypervectorIn_DI;
 
 	//define based on combinatorially defined logic
 	assign XOR_output = bit_by_bit; 
+	assign mod_second_channel_N = (store_second && Enable_SI) ? XOR_output : mod_second_channel_P;
 	localparam sub_2 = `SPATIAL_WIDTH-2;
 	localparam sub_1 = `SPATIAL_WIDTH-1;
 	localparam sub_7 = `SPATIAL_WIDTH-7;
@@ -89,9 +91,9 @@ module spatial_accumulator
 	// store second channel reg
 	always @(posedge Clk_CI) begin
 		if (Reset_RI)
-			mod_second_channel = {`SPATIAL_DIMENSION{1'b0}};
-		else if (store_second && Enable_SI)
-			mod_second_channel = XOR_output;
+			mod_second_channel_P = {`SPATIAL_DIMENSION{1'b0}};
+		else 
+			mod_second_channel_P = mod_second_channel_N;
 	end
 
 endmodule

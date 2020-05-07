@@ -86,7 +86,7 @@ wire [channel_bit_sub1:0] addr_mod3;
 genvar j;
 generate
 	for (j=0; j<`INPUT_CHANNELS; j=j+1) begin
-		assign ChannelsIn_DN[j] = ChannelsInput_DI[(`CHANNEL_WIDTH*j):(`CHANNEL_WIDTH-1+(`CHANNEL_WIDTH*j))];
+		assign ChannelsIn_DN[j] = (InputBuffersEN_S) ? ChannelsInput_DI[(`CHANNEL_WIDTH*j):(`CHANNEL_WIDTH-1+(`CHANNEL_WIDTH*j))] : ChannelsIn_DP[j];
 	end
 endgenerate
 
@@ -95,7 +95,8 @@ integer i;
 always @(posedge Clk_CI) begin
 	if (Reset_RI) begin
 		for (i=0; i < `INPUT_CHANNELS; i=i+1) ChannelsIn_DP[i] <= {`CHANNEL_WIDTH{1'b0}};
-	end else if (InputBuffersEN_S) begin
+	end 
+	else begin
 		for (i=0; i < `INPUT_CHANNELS; i=i+1) ChannelsIn_DP[i] <= ChannelsIn_DN[i];
 	end
 end
@@ -171,7 +172,7 @@ end
 // CONTROLLER
 // signals for looping through channels
 assign LastChannel_S = (CycleCntr_SP == `THIRD_MODALITY_CHANNELS-1);
-assign CycleCntr_SN = CycleCntr_SP + 1;
+assign CycleCntr_SN = (CycleCntrEN_S) ? (CycleCntr_SP + 1) ? CycleCntr_SP;
 
 // Want to store channel into second_channel register on either 2nd channel, 34th channel, or 111th channel
 assign store_second = (CycleCntr_SP == {{channel_bit_sub1{1'b0}},1'b1});
@@ -309,7 +310,7 @@ end
 always @(posedge Clk_CI) begin
 	if (Reset_RI || CycleCntrCLR_S) 
 		CycleCntr_SP <= {channel_bit{1'b0}};
-	else if (CycleCntrEN_S)
+	else
 		CycleCntr_SP <= CycleCntr_SN;
 end
 
