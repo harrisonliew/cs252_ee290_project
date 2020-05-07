@@ -393,7 +393,7 @@ end
 always @ (posedge Clk_CI) begin
 	if (Reset_RI || pop_clear)
 		popcount_loop_P <= `AM_CYCLELOOP;
-	else (if popcount_enable)
+	else if (popcount_enable)
 		popcount_loop_P <= popcount_loop_N;
 	else begin
 		popcount_loop_P <= popcount_loop_P;
