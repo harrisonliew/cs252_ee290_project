@@ -264,8 +264,8 @@ always @(*) begin
 	CompRegisterCLR_S    	= 1'b0;
 	ShiftCntrEN_S       	= 1'b0;
 	ShiftCntrCLR_S       	= 1'b0;
-	popcount_enable = 1'b0;
-	pop_clear = 1'b0;
+	//popcount_enable = 1'b0;
+	//pop_clear = 1'b0;
 
 	case (prev_state)
 		IDLE: begin
