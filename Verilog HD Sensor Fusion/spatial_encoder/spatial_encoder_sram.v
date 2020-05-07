@@ -35,7 +35,7 @@ module spatial_encoder_sram
 	output spatial_ready_1, spatial_ready_2, spatial_ready_3,
 	output spatial_valid_1, spatial_valid_2, spatial_valid_3,
 	// use same address for each iM, projM_neg and projM_pos for the corresponding modality
-	output [`ceilLog2(`INPUT_CHANNELS)-1:0] sram_addr
+	output [7:0] sram_addr
 );
 
 // FSM state definitions
@@ -43,11 +43,11 @@ localparam IDLE = 0;
 localparam DATA_RECEIVED = 1;
 localparam ACCUM_FED = 2;
 localparam CHANNELS_MAPPED = 3;
-localparam channel_bit = `ceilLog2(`INPUT_CHANNELS);
-localparam channel_bit_sub1 = `ceilLog2(`INPUT_CHANNELS)-1;
-localparam channel_bit_sub5 = `ceilLog2(`INPUT_CHANNELS)-5;
-localparam channel_bit_sub7 = `ceilLog2(`INPUT_CHANNELS)-7;
-localparam channel_bit_sub8 = `ceilLog2(`INPUT_CHANNELS)-8;
+localparam channel_bit = 8;
+localparam channel_bit_sub1 = 7;
+localparam channel_bit_sub5 = 3;
+localparam channel_bit_sub7 = 1;
+localparam channel_bit_sub8 = 0;
 
 // FSM and control signals
 reg [1:0] prev_state, next_state;
@@ -172,7 +172,7 @@ end
 // CONTROLLER
 // signals for looping through channels
 assign LastChannel_S = (CycleCntr_SP == `THIRD_MODALITY_CHANNELS-1);
-assign CycleCntr_SN = (CycleCntrEN_S) ? (CycleCntr_SP + 1) ? CycleCntr_SP;
+assign CycleCntr_SN = (CycleCntrEN_S) ? (CycleCntr_SP + 1) : CycleCntr_SP;
 
 // Want to store channel into second_channel register on either 2nd channel, 34th channel, or 111th channel
 assign store_second = (CycleCntr_SP == {{channel_bit_sub1{1'b0}},1'b1});

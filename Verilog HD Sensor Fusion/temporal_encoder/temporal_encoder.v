@@ -48,6 +48,7 @@ always @ (*) begin
     for (i=1; i<`NGRAM_SIZE; i=i+1) begin
       result_N = result_N ^ NGram_DP[i];
     end
+  end
   else begin
     result_N = result_P;
   end
