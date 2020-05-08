@@ -3,12 +3,14 @@
 #include "fusion_funcs.h"
 #include "init.h"
 #include "mems_early.h"
-#include "vec_majority_3.h"
+#include "vec_xor.h"
+
+// Just a test to see what's the minimum speedup I can get
 
 int main(){
-    uint64_t inputs[3][bit_dim];
+    uint64_t inputs[2][bit_dim];
 
-    for(int i = 0; i < 3; i++) {
+    for(int i = 0; i < 2; i++) {
         memcpy(inputs[i], iM_GSR[i], sizeof(inputs[i]));
     }
 
@@ -18,7 +20,7 @@ int main(){
     uint64_t start = read_cycles();
 
     for(int b = 0; b < bit_dim; b++) {
-        cpu_result[b] = (inputs[0][b] & inputs[1][b]) | (inputs[1][b] & inputs[2][b]) | (inputs[2][b] & inputs[0][b]);
+        cpu_result[b] = inputs[0][b] ^ inputs[1][b];
     }
 
     printf("cpu cycles: %d\n", read_cycles() - start);
@@ -26,7 +28,7 @@ int main(){
     // Hwacha majority
     start = read_cycles();
 
-    vec_majority_3_asm(bit_dim, vec_result, inputs[0], inputs[1], inputs[2]);
+    vec_xor_asm(bit_dim, vec_result, inputs[0], inputs[1]);
     
     printf("hwacha cycles: %d\n", read_cycles() - start);
 
