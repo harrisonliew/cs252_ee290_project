@@ -1,6 +1,6 @@
 include $(abs_top_srcdir)/Makefrag
 
-tests = main spatial
+tests = main spatial vec_majority_3
 
 tests_baremetal = $(tests:=-baremetal)
 ifdef BAREMETAL_ONLY
@@ -10,7 +10,7 @@ else
 endif
 
 BENCH_COMMON = $(abs_top_srcdir)/esp-tests/benchmarks/common
-FUSION_FUNCS = $(abs_top_srcdir)/fusion/fusion_funcs.c $(abs_top_srcdir)/fusion/associative_memory.c
+FUSION_FUNCS = $(abs_top_srcdir)/fusion/fusion_funcs.c $(abs_top_srcdir)/fusion/associative_memory.c $(abs_top_srcdir)/fusion/vec_majority_3_asm.S
 
 CFLAGS := $(CFLAGS) \
 	-DPREALLOCATE=1 \
@@ -44,8 +44,8 @@ all: $(tests_baremetal) $(tests_linux)
 vpath %.c $(src_dir)
 
 %-baremetal: %.c $(FUSION_FUNCS)
-	$(CC_BAREMETAL) $^ $(LFLAGS) -o $@ $(CFLAGS_BAREMETAL)\
-		$(wildcard $(BENCH_COMMON)/*.c) $(wildcard $(BENCH_COMMON)/*.S) $(LIBS)
+	$(CC_BAREMETAL) $^ $(wildcard $(BENCH_COMMON)/*.c) $(wildcard $(BENCH_COMMON)/*.S)\
+		$(LFLAGS) -o $@ $(CFLAGS_BAREMETAL) $(LIBS)
 
 %-linux: %.c $(FUSION_FUNCS)
 	$(CC_LINUX) $^ $(LFLAGS) -o $@ $(CFLAGS)

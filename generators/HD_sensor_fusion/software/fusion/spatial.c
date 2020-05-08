@@ -21,7 +21,7 @@ int main(){
 
     //spatially encode first sample
     memcpy(buffer, TEST_SET_GSR[0], sizeof(TEST_SET_GSR[0]));
-    computeNgram(channels_GSR, buffer, iM_GSR, projM_pos_GSR, projM_neg_GSR, q);
+    computeNgram(channels_GSR, cntr_bits_GSR, buffer, iM_GSR, projM_pos_GSR, projM_neg_GSR, q);
 
     #if PROFILE == 1
         printf("Spatial cycles: %llu\n", read_cycles() - spatial_start);

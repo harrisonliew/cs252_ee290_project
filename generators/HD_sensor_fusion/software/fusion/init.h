@@ -9,9 +9,13 @@
 //number of classes to be classify
 #define classes 2
 //number of acquisition's channels
+//and # of bits needed for popcounter
 #define channels_GSR 32
+#define cntr_bits_GSR 6
 #define channels_ECG 77
+#define cntr_bits_ECG 7
 #define channels_EEG 105
+#define cntr_bits_EEG 7
 //dimension of the hypervectors after compression (dimension/32 rounded to the smallest integer)
 #define bit_dim 156
 //number of input samples

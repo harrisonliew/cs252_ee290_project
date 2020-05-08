@@ -67,7 +67,7 @@ void hamming_dist(uint64_t q[bit_dim + 1], uint64_t aM[][bit_dim + 1], int sims[
 	}
 }
 
-void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint64_t projM_pos[][bit_dim + 1], uint64_t projM_neg[][bit_dim + 1], uint64_t query[bit_dim + 1]){
+void computeNgram(int channels, int cntr_bits, float buffer[], uint64_t iM[][bit_dim + 1], uint64_t projM_pos[][bit_dim + 1], uint64_t projM_neg[][bit_dim + 1], uint64_t query[bit_dim + 1]){
 /*************************************************************************
 	DESCRIPTION: computes the N-gram
 
@@ -81,77 +81,56 @@ void computeNgram(int channels, float buffer[], uint64_t iM[][bit_dim + 1], uint
 
     #if PROFILE == 1
         uint64_t cpu_start = read_cycles();
-        uint64_t mux_start, mux_end, maj_start, maj_end;
     #endif
 
-    memset( query, 0, (bit_dim+1)*sizeof(uint64_t));
+    uint64_t chHV, chHV2;
 
-    int num_mats = (channels+1)/64 + 1;
-
-    uint64_t chHV[num_mats*64];
+    int cntr_init = (1 << (cntr_bits-1)) - (channels+1)/2 - 1;
+    uint64_t cntr[cntr_bits];
+    uint64_t temp, carry;
 
 	//Spatial Encoder: captures the spatial information for a given time-aligned samples of channels
 	for(int i = 0; i < bit_dim + 1; i++){
 
-        #if PROFILE == 1
-            mux_start = read_cycles();
-        #endif
+        //fastest componentwise majority: bit serial, word parallel
+        //initialize counter to 2^(cntr_bits)/2 - channels/2
+        //that way, the counter msb uint becomes the final query HV
 
-		for(int j = 0; j < channels; j++){
-
-            // 0.0 is not checked (highly unlikely to be exactly 0)
-            chHV[j] = iM[j][i] ^ (buffer[j] > 0.0 ? projM_pos[j][i] : projM_neg[j][i]);
-
-		}
-		//this is done in the Matlab for some reason???
-		chHV[channels] = chHV[channels-1] ^ chHV[1];
-
-        for(int j = channels+1; j < num_mats*64; j++){
-            chHV[j] = 0;
+        for(int n = 0; n < cntr_bits; n++) {
+            if ((cntr_init  & (1 << n)) == 0) {
+                cntr[n] = 0;
+            } else {
+                cntr[n] = 0xFFFFFFFFFFFFFFFFULL;
+            }
         }
 
-        #if PROFILE == 1
-            mux_end = read_cycles();
-        #endif
+        for(int j = 0; j < channels+1; j++) {
 
-        //much faster componentwise majority: do some 64 bit matrix transposes
-		//and then compute the number of 1's with the function numberOfSetBits(uint64_t).
-        uint64_t t, mask;
+            // calc chHV
+            if(j == channels) {
+                chHV ^= chHV2;
+            } else {
+                // slight hit if we don't check against 0 exactly also
+                //chHV = buffer[j] == 0.0 ? iM[j][i] : (iM[j][i] ^ (buffer[j] > 0.0 ? projM_pos[j][i] : projM_neg[j][i]));
+                chHV = iM[j][i] ^ (buffer[j] >= 0.0 ? projM_pos[j][i] : projM_neg[j][i]);
+            }
+            if(j == 1) chHV2 = chHV;
 
-        #if PROFILE == 1
-            maj_start = read_cycles();
-        #endif
-
-        for (int n = 0; n < num_mats*64; n += 64) {
-            //taken from Hacker's Delight. ~400 instructions.
-            mask = 0x00000000FFFFFFFFULL;
-            for (int j = 32; j != 0; j = j >> 1, mask = mask ^ (mask << j)) {
-                for (int k = 0; k < 64; k = (k + j + 1) & ~j) {
-                    t = (chHV[n+k] ^ (chHV[n+k+j] >> j)) & mask;
-                    chHV[n+k] = chHV[n+k] ^ t;
-                    chHV[n+k+j] = chHV[n+k+j] ^ (t << j);
-                }
+            // incremental popcount
+            carry = cntr[0] & chHV;
+            cntr[0] ^= chHV; 
+            for(int n = 1; n < cntr_bits; n++) {
+                temp = cntr[n];
+                cntr[n] ^= carry;
+                carry &= temp;
             }
         }
         
-        #if PROFILE == 1
-            maj_end = read_cycles();
-        #endif
-
-        //note row indices swapped with desired bit position after transpose
-		for(int z = 63; z >= 0; z--){
-            int num_set_bits = 0;
-            for (int n = 63; n < num_mats*64; n += 64) {
-                num_set_bits += numberOfSetBits(chHV[n-z]);
-            }
-            if (num_set_bits > channels/2) query[i] = query[i] | ( 1ULL << z ) ;
-        }
+        query[i] = cntr[cntr_bits-1];
 
 	}
 
     #if PROFILE == 1
-        printf("muxing cycles: %llu\n", mux_end - mux_start);
-        printf("majority cycles: %llu\n", maj_end - maj_start);
         printf("spatial encoding cycles: %llu\n", read_cycles() - cpu_start);
     #endif
 
