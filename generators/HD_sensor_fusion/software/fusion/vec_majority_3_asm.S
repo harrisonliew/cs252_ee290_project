@@ -15,17 +15,17 @@
 # a3 has uint64* y
 # a4 has uint64* z
 vec_majority_3_asm:
-	li t0, VCFG(4, 0, 0, 1)
+	li t0, VCFG(6, 0, 0, 1)
 	vsetcfg t0
 stripmine:
-	vsetvl t0, a0 #a0 is requested vec len, actual is placed in t0
+	vsetvl t0, a0 	#a0 is requested vec len, actual is placed in t0
 	vmca va0, a2
 	vmca va1, a3
 	vmca va2, a4
 	vmca va3, a1
 	la t5, majority_3_v
 	vf 0(t5)
-	slli t1, t0, 2
+	slli t1, t0, 3
 	add a1, a1, t1
 	add a2, a2, t1
 	add a3, a3, t1

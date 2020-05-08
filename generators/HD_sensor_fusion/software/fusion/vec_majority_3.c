@@ -6,7 +6,7 @@
 #include "vec_majority_3.h"
 
 int main(){
-    int dim = ((bit_dim+1)/8)*8;
+    int dim = (bit_dim/8)*8;
 
     uint64_t inputs[3][dim];
 
