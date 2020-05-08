@@ -187,9 +187,23 @@ def fusion_init_environment(x: hammer_vlsi.HammerTool) -> bool:
     # Python sucks here for verbosity
     verbose_append = x.verbose_append
 
+    # Superthreading
+    x.append('set_db max_cpus_per_server {}'.format(x.get_setting("vlsi.core.max_threads")))
+    x.append('set_db super_thread_batch_command {bsub -q bora -o /dev/null -n 8 -R "span\[hosts=1\]"}')
+    x.append('''
+        set_db super_thread_servers {localhost batch}
+        set_db super_thread_status_command {bsub -l}
+        set_db super_thread_debug_directory st-debug
+        set_db st_launch_wait_time 1
+    ''', clean=True)
+
     verbose_append('''
         # let it unroll up to hypervectors size
         set_db hdl_max_loop_limit 10000
+
+        set_db print_ports_nets_preserved_for_cb true
+
+        set_db delete_unloaded_insts false
     ''', clean=True)
 
     # Clock gating setup

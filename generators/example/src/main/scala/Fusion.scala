@@ -45,9 +45,9 @@ class FusionIO(val c: FusionParams) extends Bundle {
 
   // memory
   val sram1_ready, sram1_valid, sram2_ready, sram2_valid, sram3_ready, sram3_valid, sram4_ready, sram4_valid, sram5_ready, sram5_valid, sram6_ready, sram6_valid, sram7_ready, sram7_valid, sram8_ready, sram8_valid, sram9_ready, sram9_valid = Input(Bool())
-  val IMOut_mod1_D, IMOut_mod2_D, IMOut_mod3_D, projM_mod1_neg, projM_mod2_neg, projM_mod3_neg, projM_mod1_pos, projM_mod2_pos, projM_mod3_pos = Input(UInt(c.hvDim.W))
+  val IMOut_mod3_D, projM_mod3_neg, projM_mod3_pos = Input(UInt(c.hvDim.W))
   val spatial_ready_1, spatial_ready_2, spatial_ready_3, spatial_valid_1, spatial_valid_2, spatial_valid_3 = Output(Bool())
-  val addr_mod1, addr_mod2, addr_mod3 = Output(UInt(log2Ceil(c.inputChannels).W))
+  val sram_addr = Output(UInt(log2Ceil(c.inputChannels).W)) // TODO: should actually be log2Ceil(channelsEEG)
 }
 
 trait FusionTopIO extends Bundle {
@@ -119,79 +119,47 @@ trait FusionModule extends HasRegMap {
 
   // memories
   // val AM_A, AM_V = Module(new FusionMemory(c.hvDim, log2Ceil(c.classes)))
-  val projM_pos_GSR, projM_neg_GSR, iM_GSR = Module(new FusionMemory(c.hvDim, log2Ceil(c.channelsGSR))).io
-  val projM_pos_ECG, projM_neg_ECG, iM_ECG = Module(new FusionMemory(c.hvDim, log2Ceil(c.channelsECG))).io
-  val projM_pos_EEG, projM_neg_EEG, iM_EEG = Module(new FusionMemory(c.hvDim, log2Ceil(c.channelsEEG))).io
+  val projM_pos, projM_neg, iM = Module(new FusionMemory(c.hvDim, log2Ceil(c.channelsEEG))).io
   val projM_pos_data, projM_neg_data, iM_data = Reg(UInt(32.W))
   val filln = c.hvDim/32+1
 
   // state machine 
   // val idle :: load_mems :: train :: update :: predict :: Nil = Enum(5)
   val idle :: load_mems :: predict :: Nil = Enum(3)
-  val memR_all :: memW_GSR :: memW_ECG :: memW_EEG :: Nil = Enum(4)
-  val memWR = WireInit(memR_all)
 
   val state = RegInit(idle)
+  val load = RegInit(false.B)
   val memCnt = RegInit(0.U(log2Ceil(c.inputChannels).W))
 
-  state match {
-    case idle => {
-      memWR := memR_all
-      state := load_mems
+  switch (state) {
+    is (idle) {
+      state := Mux(load, load_mems, idle)
     }
-    case load_mems => {
+    is (load_mems) {
       // TODO: memory loading sequence from training
-      when(memCnt < c.channelsGSR.U) {
-        memWR := memW_GSR
-        state := load_mems
-      } .elsewhen(memCnt < (c.channelsGSR + c.channelsECG).U) {
-        memWR := memW_ECG
-        state := load_mems
-      } .elsewhen(memCnt < (c.channelsGSR + c.channelsECG + c.channelsEEG).U) {
-        memWR := memW_EEG
-        state := load_mems
-      } .otherwise {
-        memWR := memR_all
-        state := predict
-      }
-      memCnt := memCnt + 1.U
+      state := Mux(memCnt < c.channelsEEG.U, load_mems, predict)
     }
-    case predict => {
-      memWR := memR_all
+    is (predict) {
       state := predict
     }
-    case _ => {
-      memWR := memR_all
-      state := idle
-    }
   }
+  memCnt := memCnt + (state === load_mems).asUInt()
 
   // hook up memories & blackbox
-  when(state === load_mems) {
-    Seq(projM_pos_GSR, projM_neg_GSR, iM_GSR).foreach{mem => mem.addr := memCnt}
-    Seq(projM_pos_ECG, projM_neg_ECG, iM_ECG).foreach{mem => mem.addr := memCnt - c.channelsGSR.U}
-    Seq(projM_pos_EEG, projM_neg_EEG, iM_EEG).foreach{mem => mem.addr := memCnt - c.channelsGSR.U - c.channelsECG.U}
-  } .otherwise {
-    Seq(projM_pos_GSR, projM_neg_GSR, iM_GSR).foreach{mem => mem.addr := impl.io.addr_mod1.asTypeOf(mem.addr)}
-    Seq(projM_pos_ECG, projM_neg_ECG, iM_ECG).foreach{mem => mem.addr := impl.io.addr_mod2.asTypeOf(mem.addr)}
-    Seq(projM_pos_EEG, projM_neg_EEG, iM_EEG).foreach{mem => mem.addr := impl.io.addr_mod3.asTypeOf(mem.addr)}
+  Seq(projM_pos, projM_neg, iM).foreach{mem => 
+    mem.wr := state === load_mems
+    mem.addr := Mux(state === load_mems, memCnt, impl.io.sram_addr)
   }
 
-  Seq(projM_pos_GSR, projM_neg_GSR, iM_GSR).foreach{mem => mem.wr := memWR === memW_GSR}
-  Seq(projM_pos_ECG, projM_neg_ECG, iM_ECG).foreach{mem => mem.wr := memWR === memW_ECG}
-  Seq(projM_pos_EEG, projM_neg_EEG, iM_EEG).foreach{mem => mem.wr := memWR === memW_EEG}
-
-  Seq(projM_pos_GSR, projM_pos_ECG, projM_pos_EEG).foreach{mem => mem.in := Fill(filln, projM_pos_data)}
-  Seq(projM_neg_GSR, projM_neg_ECG, projM_neg_EEG).foreach{mem => mem.in := Fill(filln, projM_neg_data)}
-  Seq(iM_GSR, iM_ECG, iM_EEG).foreach{mem => mem.in := Fill(filln, iM_data)}
+  projM_pos.in := Fill(filln, projM_pos_data)
+  projM_neg.in := Fill(filln, projM_neg_data)
+  iM.in := Fill(filln, iM_data)
 
   impl.io.Clk_CI := clock
   impl.io.Reset_RI := reset.asBool
 
-  // state machine stuff
-  impl.io.ValidIn_SI := state === predict
-  impl.io.ReadyIn_SI := state === predict
-  Seq(impl.io.sram1_ready, impl.io.sram1_valid, impl.io.sram2_ready, impl.io.sram2_valid, impl.io.sram3_ready, impl.io.sram3_valid, impl.io.sram4_ready, impl.io.sram4_valid, impl.io.sram5_ready, impl.io.sram5_valid, impl.io.sram6_ready, impl.io.sram6_valid, impl.io.sram7_ready, impl.io.sram7_valid, impl.io.sram8_ready, impl.io.sram8_valid, impl.io.sram9_ready, impl.io.sram9_valid).foreach{rv => rv := state === predict}
+  // not real handshaking
+  Seq(impl.io.ValidIn_SI, impl.io.ReadyIn_SI, impl.io.sram1_ready, impl.io.sram1_valid, impl.io.sram2_ready, impl.io.sram2_valid, impl.io.sram3_ready, impl.io.sram3_valid, impl.io.sram4_ready, impl.io.sram4_valid, impl.io.sram5_ready, impl.io.sram5_valid, impl.io.sram6_ready, impl.io.sram6_valid, impl.io.sram7_ready, impl.io.sram7_valid, impl.io.sram8_ready, impl.io.sram8_valid, impl.io.sram9_ready, impl.io.sram9_valid).foreach{rv => rv := state === predict}
   status := Cat(Seq(impl.io.ReadyOut_SO, impl.io.ValidOut_SO, impl.io.spatial_ready_1, impl.io.spatial_ready_2, impl.io.spatial_ready_3, impl.io.spatial_valid_1, impl.io.spatial_valid_2, impl.io.spatial_valid_3))
 
   // connect labels & data
@@ -201,15 +169,9 @@ trait FusionModule extends HasRegMap {
   io.distOutA := impl.io.DistanceOut_A_DO
   io.distOutV := impl.io.DistanceOut_V_DO
 
-  impl.io.projM_mod1_pos := projM_pos_GSR.out
-  impl.io.projM_mod1_neg := projM_neg_GSR.out
-  impl.io.IMOut_mod1_D := iM_GSR.out
-  impl.io.projM_mod2_pos := projM_pos_ECG.out
-  impl.io.projM_mod2_neg := projM_neg_ECG.out
-  impl.io.IMOut_mod2_D := iM_ECG.out
-  impl.io.projM_mod3_pos := projM_pos_EEG.out
-  impl.io.projM_mod3_neg := projM_neg_EEG.out
-  impl.io.IMOut_mod3_D := iM_EEG.out
+  impl.io.projM_mod3_pos := projM_pos.out
+  impl.io.projM_mod3_neg := projM_neg.out
+  impl.io.IMOut_mod3_D := iM.out
 
   // output busy
   io.fusion_busy := state =/= idle
@@ -218,13 +180,15 @@ trait FusionModule extends HasRegMap {
     0x00 -> Seq(
       RegField.r(8, status)), // a read-only register capturing current status
     0x04 -> Seq(
-      RegField.r(1, memWR)),
+      RegField.r(2, state)),
     0x08 -> Seq(
       RegField.w(32, projM_pos_data)),
     0x0C -> Seq(
       RegField.w(32, projM_neg_data)),
     0x10 -> Seq(
       RegField.w(32, iM_data)),
+    0x14 -> Seq(
+      RegField.w(1, load)),
   )
 }
 
