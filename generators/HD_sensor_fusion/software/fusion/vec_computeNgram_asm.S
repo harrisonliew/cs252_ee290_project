@@ -22,48 +22,42 @@
 cntr_init_6b_v:
 	vpset vp0
 
-	vand vv6, vs0, vs0		# set cntr[0] to 0
+	vand vv6, vv6, vs0		# set cntr[0] to 0
 	vslli vs4, vs1, 0		# 1 << 0
 	vand vs4, vs3, vs4		# cntr_init & (1 << 0)
-	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 0)) == 0
-	@vp1 vcjal 1, vs4, 8		# skip set to ones
-	vand vv6, vs2, vs2		# set cntr[0] to 1's
+	vcmpeq vp1, vs4, vv6	# (cntr_init & (1 << 0)) == 0
+@!vp1 vor vv6, vv6, vs2		# set cntr[0] to 1's
 
-	vand vv7, vs0, vs0		# set cntr[1] to 0
+	vand vv7, vv7, vs0		# set cntr[1] to 0
 	vslli vs4, vs1, 1		# 1 << 1
 	vand vs4, vs3, vs4		# cntr_init & (1 << 1)
-	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 1)) == 0
-	@vp1 vcjal 1, vs4, 8		# skip set to ones
-	vand vv7, vs2, vs2		# set cntr[1] to 1's
+	vcmpeq vp1, vs4, vv7	# (cntr_init & (1 << 1)) == 0
+@!vp1 vor vv7, vv7, vs2		# set cntr[1] to 1's
 
-	vand vv8, vs0, vs0		# set cntr[2] to 0
+	vand vv8, vv8, vs0		# set cntr[2] to 0
 	vslli vs4, vs1, 2		# 1 << 2
 	vand vs4, vs3, vs4		# cntr_init & (1 << 2)
-	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 2)) == 0
-	@vp1 vcjal 1, vs4, 8		# skip set to ones
-	vand vv8, vs2, vs2		# set cntr[2] to 1's
+	vcmpeq vp1, vs4, vv8	# (cntr_init & (1 << 2)) == 0
+@!vp1 vor vv8, vv8, vs2		# set cntr[2] to 1's
 
-	vand vv9, vs0, vs0		# set cntr[3] to 0
+	vand vv9, vv9, vs0		# set cntr[3] to 0
 	vslli vs4, vs1, 3		# 1 << 3
 	vand vs4, vs3, vs4		# cntr_init & (1 << 3)
-	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 3)) == 0
-	@vp1 vcjal 1, vs4, 8		# skip set to ones
-	vand vv9, vs2, vs2		# set cntr[3] to 1's
+	vcmpeq vp1, vs4, vv9	# (cntr_init & (1 << 3)) == 0
+@!vp1 vor vv9, vv9, vs2		# set cntr[3] to 1's
 
-	vand vv10, vs0, vs0		# set cntr[4] to 0
+	vand vv10, vv10, vs0	# set cntr[4] to 0
 	vslli vs4, vs1, 4		# 1 << 4
 	vand vs4, vs3, vs4		# cntr_init & (1 << 4)
-	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 4)) == 0
-	@vp1 vcjal 1, vs4, 8		# skip set to ones
-	vand vv10, vs2, vs2		# set cntr[4] to 1's
+	vcmpeq vp1, vs4, vv10	# (cntr_init & (1 << 4)) == 0
+@!vp1 vor vv10, vv10, vs2	# set cntr[4] to 1's
 
-	vand vv11, vs0, vs0		# set cntr[5] to 0
+	vand vv11, vv11, vs0	# set cntr[5] to 0
 	vslli vs4, vs1, 5		# 1 << 5
 	vand vs4, vs3, vs4		# cntr_init & (1 << 5)
-	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 5)) == 0
-	@vp1 vcjal 1, vs4, 8		# skip set to ones
-	vand vv11, vs2, vs2		# set cntr[5] to 1's
-
+	vcmpeq vp1, vs4, vv11	# (cntr_init & (1 << 5)) == 0
+@!vp1 vor vv11, vv11, vs2	# set cntr[5] to 1's
+	
 	vstop
 
 # init 7b counter
@@ -75,54 +69,47 @@ cntr_init_6b_v:
 cntr_init_7b_v:
 	vpset vp0
 
-	vand vv6, vs0, vs0		# set cntr[0] to 0
+	vand vv6, vv6, vs0		# set cntr[0] to 0
 	vslli vs4, vs1, 0		# 1 << 0
 	vand vs4, vs3, vs4		# cntr_init & (1 << 0)
-	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 0)) == 0
-	@vp1 vcjal 1, vs4, 8		# skip set to ones
-	vand vv6, vs2, vs2		# set cntr[0] to 1's
+	vcmpeq vp1, vs4, vv6	# (cntr_init & (1 << 0)) == 0
+@!vp1 vor vv6, vv6, vs2		# set cntr[0] to 1's
 
-	vand vv7, vs0, vs0		# set cntr[1] to 0
+	vand vv7, vv7, vs0		# set cntr[1] to 0
 	vslli vs4, vs1, 1		# 1 << 1
 	vand vs4, vs3, vs4		# cntr_init & (1 << 1)
-	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 1)) == 0
-	@vp1 vcjal 1, vs4, 8		# skip set to ones
-	vand vv7, vs2, vs2		# set cntr[1] to 1's
+	vcmpeq vp1, vs4, vv7	# (cntr_init & (1 << 1)) == 0
+@!vp1 vor vv7, vv7, vs2		# set cntr[1] to 1's
 
-	vand vv8, vs0, vs0		# set cntr[2] to 0
+	vand vv8, vv8, vs0		# set cntr[2] to 0
 	vslli vs4, vs1, 2		# 1 << 2
 	vand vs4, vs3, vs4		# cntr_init & (1 << 2)
-	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 2)) == 0
-	@vp1 vcjal 1, vs4, 8		# skip set to ones
-	vand vv8, vs2, vs2		# set cntr[2] to 1's
+	vcmpeq vp1, vs4, vv8	# (cntr_init & (1 << 2)) == 0
+@!vp1 vor vv8, vv8, vs2		# set cntr[2] to 1's
 
-	vand vv9, vs0, vs0		# set cntr[3] to 0
+	vand vv9, vv9, vs0		# set cntr[3] to 0
 	vslli vs4, vs1, 3		# 1 << 3
 	vand vs4, vs3, vs4		# cntr_init & (1 << 3)
-	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 3)) == 0
-	@vp1 vcjal 1, vs4, 8		# skip set to ones
-	vand vv9, vs2, vs2		# set cntr[3] to 1's
+	vcmpeq vp1, vs4, vv9	# (cntr_init & (1 << 3)) == 0
+@!vp1 vor vv9, vv9, vs2		# set cntr[3] to 1's
 
-	vand vv10, vs0, vs0		# set cntr[4] to 0
+	vand vv10, vv10, vs0	# set cntr[4] to 0
 	vslli vs4, vs1, 4		# 1 << 4
 	vand vs4, vs3, vs4		# cntr_init & (1 << 4)
-	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 4)) == 0
-	@vp1 vcjal 1, vs4, 8		# skip set to ones
-	vand vv10, vs2, vs2		# set cntr[4] to 1's
+	vcmpeq vp1, vs4, vv10	# (cntr_init & (1 << 4)) == 0
+@!vp1 vor vv10, vv10, vs2	# set cntr[4] to 1's
 
-	vand vv11, vs0, vs0		# set cntr[5] to 0
+	vand vv11, vv11, vs0	# set cntr[5] to 0
 	vslli vs4, vs1, 5		# 1 << 5
 	vand vs4, vs3, vs4		# cntr_init & (1 << 5)
-	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 5)) == 0
-	@vp1 vcjal 1, vs4, 8		# skip set to ones
-	vand vv11, vs2, vs2		# set cntr[5] to 1's
-
-	vand vv12, vs0, vs0		# set cntr[6] to 0
+	vcmpeq vp1, vs4, vv11	# (cntr_init & (1 << 5)) == 0
+@!vp1 vor vv11, vv11, vs2	# set cntr[5] to 1's
+	
+	vand vv12, vv12, vs0	# set cntr[6] to 0
 	vslli vs4, vs1, 6		# 1 << 6
 	vand vs4, vs3, vs4		# cntr_init & (1 << 6)
-	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 6)) == 0
-	@vp1 vcjal 1, vs4, 8		# skip set to ones
-	vand vv12, vs2, vs2		# set cntr[6] to 1's
+	vcmpeq vp1, vs4, vv12	# (cntr_init & (1 << 6)) == 0
+@!vp1 vor vv12, vv12, vs2	# set cntr[6] to 1's
 
 	vstop
 
@@ -168,7 +155,7 @@ mode_6b_v:
 	vpset vp0
 
 	vand vv5, vv6, vv2		# carry = cntr[0] & chHV
-	vxor vv6, vv6, vv2		# cntr[1] ^= chHV
+	vxor vv6, vv6, vv2		# cntr[0] ^= chHV
 
 	vand vv4, vv7, vv7		# temp = cntr[1]
 	vxor vv7, vv7, vv5		# cntr[1] ^= carry
