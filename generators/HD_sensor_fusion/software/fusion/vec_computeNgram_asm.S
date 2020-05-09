@@ -1,15 +1,12 @@
 ## Hwacha computeNgram code
 
-#include "vec-util.h"
-
 .text
-.align 2
 
 .globl cntr_init_6b_v
 .globl cntr_init_7b_v
 .globl last_chHV_v
 .globl proj_chHV_pos_v
-.globl proj_chHV_pos_v
+.globl proj_chHV_neg_v
 .globl set_chHV2_v
 .globl mode_6b_v
 .globl mode_7b_v
@@ -29,42 +26,42 @@ cntr_init_6b_v:
 	vslli vs4, vs1, 0		# 1 << 0
 	vand vs4, vs3, vs4		# cntr_init & (1 << 0)
 	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 0)) == 0
-	@!vp1 vcjal vs4, 8		# skip set to ones
+	@vp1 vcjal 1, vs4, 8		# skip set to ones
 	vand vv6, vs2, vs2		# set cntr[0] to 1's
 
 	vand vv7, vs0, vs0		# set cntr[1] to 0
 	vslli vs4, vs1, 1		# 1 << 1
 	vand vs4, vs3, vs4		# cntr_init & (1 << 1)
 	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 1)) == 0
-	@!vp1 vcjal vs4, 8		# skip set to ones
+	@vp1 vcjal 1, vs4, 8		# skip set to ones
 	vand vv7, vs2, vs2		# set cntr[1] to 1's
 
 	vand vv8, vs0, vs0		# set cntr[2] to 0
 	vslli vs4, vs1, 2		# 1 << 2
 	vand vs4, vs3, vs4		# cntr_init & (1 << 2)
 	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 2)) == 0
-	@!vp1 vcjal vs4, 8		# skip set to ones
+	@vp1 vcjal 1, vs4, 8		# skip set to ones
 	vand vv8, vs2, vs2		# set cntr[2] to 1's
 
 	vand vv9, vs0, vs0		# set cntr[3] to 0
 	vslli vs4, vs1, 3		# 1 << 3
 	vand vs4, vs3, vs4		# cntr_init & (1 << 3)
 	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 3)) == 0
-	@!vp1 vcjal vs4, 8		# skip set to ones
+	@vp1 vcjal 1, vs4, 8		# skip set to ones
 	vand vv9, vs2, vs2		# set cntr[3] to 1's
 
 	vand vv10, vs0, vs0		# set cntr[4] to 0
 	vslli vs4, vs1, 4		# 1 << 4
 	vand vs4, vs3, vs4		# cntr_init & (1 << 4)
 	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 4)) == 0
-	@!vp1 vcjal vs4, 8		# skip set to ones
+	@vp1 vcjal 1, vs4, 8		# skip set to ones
 	vand vv10, vs2, vs2		# set cntr[4] to 1's
 
 	vand vv11, vs0, vs0		# set cntr[5] to 0
 	vslli vs4, vs1, 5		# 1 << 5
 	vand vs4, vs3, vs4		# cntr_init & (1 << 5)
 	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 5)) == 0
-	@!vp1 vcjal vs4, 8		# skip set to ones
+	@vp1 vcjal 1, vs4, 8		# skip set to ones
 	vand vv11, vs2, vs2		# set cntr[5] to 1's
 
 	vstop
@@ -82,49 +79,49 @@ cntr_init_7b_v:
 	vslli vs4, vs1, 0		# 1 << 0
 	vand vs4, vs3, vs4		# cntr_init & (1 << 0)
 	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 0)) == 0
-	@!vp1 vcjal vs4, 8		# skip set to ones
+	@vp1 vcjal 1, vs4, 8		# skip set to ones
 	vand vv6, vs2, vs2		# set cntr[0] to 1's
 
 	vand vv7, vs0, vs0		# set cntr[1] to 0
 	vslli vs4, vs1, 1		# 1 << 1
 	vand vs4, vs3, vs4		# cntr_init & (1 << 1)
 	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 1)) == 0
-	@!vp1 vcjal vs4, 8		# skip set to ones
+	@vp1 vcjal 1, vs4, 8		# skip set to ones
 	vand vv7, vs2, vs2		# set cntr[1] to 1's
 
 	vand vv8, vs0, vs0		# set cntr[2] to 0
 	vslli vs4, vs1, 2		# 1 << 2
 	vand vs4, vs3, vs4		# cntr_init & (1 << 2)
 	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 2)) == 0
-	@!vp1 vcjal vs4, 8		# skip set to ones
+	@vp1 vcjal 1, vs4, 8		# skip set to ones
 	vand vv8, vs2, vs2		# set cntr[2] to 1's
 
 	vand vv9, vs0, vs0		# set cntr[3] to 0
 	vslli vs4, vs1, 3		# 1 << 3
 	vand vs4, vs3, vs4		# cntr_init & (1 << 3)
 	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 3)) == 0
-	@!vp1 vcjal vs4, 8		# skip set to ones
+	@vp1 vcjal 1, vs4, 8		# skip set to ones
 	vand vv9, vs2, vs2		# set cntr[3] to 1's
 
 	vand vv10, vs0, vs0		# set cntr[4] to 0
 	vslli vs4, vs1, 4		# 1 << 4
 	vand vs4, vs3, vs4		# cntr_init & (1 << 4)
 	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 4)) == 0
-	@!vp1 vcjal vs4, 8		# skip set to ones
+	@vp1 vcjal 1, vs4, 8		# skip set to ones
 	vand vv10, vs2, vs2		# set cntr[4] to 1's
 
 	vand vv11, vs0, vs0		# set cntr[5] to 0
 	vslli vs4, vs1, 5		# 1 << 5
 	vand vs4, vs3, vs4		# cntr_init & (1 << 5)
 	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 5)) == 0
-	@!vp1 vcjal vs4, 8		# skip set to ones
+	@vp1 vcjal 1, vs4, 8		# skip set to ones
 	vand vv11, vs2, vs2		# set cntr[5] to 1's
 
 	vand vv12, vs0, vs0		# set cntr[6] to 0
 	vslli vs4, vs1, 6		# 1 << 6
 	vand vs4, vs3, vs4		# cntr_init & (1 << 6)
 	vcmpeq vp1, vs4, vs0	# (cntr_init & (1 << 6)) == 0
-	@!vp1 vcjal vs4, 8		# skip set to ones
+	@vp1 vcjal 1, vs4, 8		# skip set to ones
 	vand vv12, vs2, vs2		# set cntr[6] to 1's
 
 	vstop

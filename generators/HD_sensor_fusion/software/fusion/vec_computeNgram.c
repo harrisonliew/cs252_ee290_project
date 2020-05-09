@@ -99,6 +99,8 @@ void vec_computeNgram(int channels, int cntr_bits, float buffer[], uint64_t iM[]
 
     for(int i = 0; i < bit_dim + 1; ) {
 
+        printf("i: %d\n", i);
+
         // loop setup
         int consumed;
         asm volatile ("vsetvl %0, %1" : "=r" (consumed) : "r" (i));
@@ -142,7 +144,7 @@ void vec_computeNgram(int channels, int cntr_bits, float buffer[], uint64_t iM[]
             }
             if(j == 1) {
                 // call vf block for chHV2 = chHV;
-                asm volatile ("la %0, proj_set_chHV2_v" : "=r" (set_chHV2_addr));
+                asm volatile ("la %0, set_chHV2_v" : "=r" (set_chHV2_addr));
                 asm volatile ("vf 0(%0)" : : "r" (set_chHV2_addr));
             }
 
