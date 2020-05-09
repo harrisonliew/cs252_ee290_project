@@ -65,7 +65,7 @@ void vec_computeNgram(int channels, int cntr_bits, float buffer[], uint64_t iM[]
             case 7:
                 // call 7b cntr_init vf block
                 asm volatile ("la %0, cntr_init_7b_v" : "=r" (cntr_init_7b_addr));
-                //asm volatile ("vf 0(%0)" : : "r" (cntr_init_7b_addr));
+                asm volatile ("vf 0(%0)" : : "r" (cntr_init_7b_addr));
                 break;
             default:
                 printf("only 6 or 7 counter bits supported!");

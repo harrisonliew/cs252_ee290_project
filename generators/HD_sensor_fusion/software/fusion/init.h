@@ -29,9 +29,7 @@
 //number of bits to shift by in temporal encoder
 //64b implementation will not do circular
 #define temporal_shift 64
-//use hwacha extensions instead of purely CPU
-#define USE_HWACHA 0
 //profile cycles taken
-#define PROFILE 1
+#define PROFILE 0
 
 #endif

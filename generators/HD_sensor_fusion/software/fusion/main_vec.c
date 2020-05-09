@@ -3,6 +3,7 @@
 #include <string.h>
 #include "associative_memory.h"
 #include "fusion_funcs.h"
+#include "vec_majority_3.h"
 #include "init.h"
 //the data.h and mems_<early/late>.h file can be created directly in MATLAB (after the simulation)
 //using the function "data_file_creator.m"
@@ -11,6 +12,7 @@
 //#include "mems_late.h"
 
 int main(){
+    uint64_t total_start = read_cycles();
  
     float buffer[channels_EEG]; //EEG has the most channels
           
@@ -29,7 +31,6 @@ int main(){
 	//N.B. if N = 1 we don't have the Temporal Encoder but only the Spatial Encoder.
     #if PROFILE == 1
         uint64_t spatial_start = read_cycles();
-        uint64_t total_start = spatial_start;
     #endif
 
     //spatially encode first N samples
@@ -44,9 +45,7 @@ int main(){
         vec_computeNgram(channels_EEG, cntr_bits_EEG, buffer, iM_EEG, projM_pos_EEG, projM_neg_EEG, q_EEG);
 
         //majority
-        for (int b = bit_dim; b >= 0; b--) {
-            q[z][b] = (q_GSR[b] & q_ECG[b]) | (q_ECG[b] & q_EEG[b]) | (q_EEG[b] & q_GSR[b]);
-        }
+        vec_majority_3_asm(bit_dim+1, q[z], q_GSR, q_ECG, q_EEG);
     }
 
     #if PROFILE == 1
@@ -113,7 +112,9 @@ int main(){
 
         if (class == labels[ix]) correct++;
 	
- 	    printf("Sample %d (predicted, golden) class: (%d, %d)\n", ix, class, labels[ix]);
+        #if PROFILE == 1
+ 	        printf("Sample %d (predicted, golden) class: (%d, %d)\n", ix, class, labels[ix]);
+        #endif
 
         if (ix < NUMBER_OF_INPUT_SAMPLES-N) {
             //Move forward by updating q and spatially encoding ix+Nth sample
@@ -137,9 +138,7 @@ int main(){
             vec_computeNgram(channels_EEG, cntr_bits_EEG, buffer, iM_EEG, projM_pos_EEG, projM_neg_EEG, q_EEG);
 
             //majority
-            for (int b = bit_dim; b >= 0; b--) {
-                q[N-1][b] = (q_GSR[b] & q_ECG[b]) | (q_ECG[b] & q_EEG[b]) | (q_EEG[b] & q_GSR[b]);
-            }
+            vec_majority_3_asm(bit_dim+1, q[N-1], q_GSR, q_ECG, q_EEG);
 
             #if PROFILE == 1
                 printf("Spatial update cycles: %llu\n", read_cycles() - spatial_start);
@@ -149,9 +148,7 @@ int main(){
 
 	}
 
-    #if PROFILE == 1
-        printf("Total cycles: %llu\n", read_cycles() - total_start);
-    #endif
+    printf("Total cycles: %llu\n", read_cycles() - total_start);
 
     // accuracy count (can't print % since can't print floats in RISC-V)
     printf("Correct: %d out of %d\n", correct, numTests); 

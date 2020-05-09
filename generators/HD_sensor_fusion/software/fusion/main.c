@@ -11,6 +11,7 @@
 //#include "mems_late.h"
 
 int main(){
+    uint64_t total_start = read_cycles();
  
     float buffer[channels_EEG]; //EEG has the most channels
           
@@ -29,7 +30,6 @@ int main(){
 	//N.B. if N = 1 we don't have the Temporal Encoder but only the Spatial Encoder.
     #if PROFILE == 1
         uint64_t spatial_start = read_cycles();
-        uint64_t total_start = spatial_start;
     #endif
 
     //spatially encode first N samples
@@ -113,7 +113,9 @@ int main(){
 
         if (class == labels[ix]) correct++;
 	
- 	    printf("Sample %d (predicted, golden) class: (%d, %d)\n", ix, class, labels[ix]);
+        #if PROFILE == 1
+ 	        printf("Sample %d (predicted, golden) class: (%d, %d)\n", ix, class, labels[ix]);
+        #endif
 
         if (ix < NUMBER_OF_INPUT_SAMPLES-N) {
             //Move forward by updating q and spatially encoding ix+Nth sample
@@ -149,9 +151,7 @@ int main(){
 
 	}
 
-    #if PROFILE == 1
-        printf("Total cycles: %llu\n", read_cycles() - total_start);
-    #endif
+    printf("Total cycles: %llu\n", read_cycles() - total_start);
 
     // accuracy count (can't print % since can't print floats in RISC-V)
     printf("Correct: %d out of %d\n", correct, numTests); 
