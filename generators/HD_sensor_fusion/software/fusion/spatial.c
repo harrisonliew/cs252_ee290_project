@@ -12,22 +12,22 @@
 
 int main(){
  
-    float buffer[channels_ECG];
+    float buffer[channels_GSR];
 	uint64_t q_cpu[bit_dim + 1], q_hwacha[bit_dim+1];
           
 	//CPU Spatial Encoder
     #if PROFILE == 1
         uint64_t spatial_start = read_cycles();
 
-    memcpy(buffer, TEST_SET_ECG[0], sizeof(TEST_SET_ECG[0]));
-    computeNgram(channels_ECG, cntr_bits_ECG, buffer, iM_ECG, projM_pos_ECG, projM_neg_ECG, q_cpu);
+    memcpy(buffer, TEST_SET_GSR[0], sizeof(TEST_SET_GSR[0]));
+    computeNgram(channels_GSR, cntr_bits_GSR, buffer, iM_GSR, projM_pos_GSR, projM_neg_GSR, q_cpu);
 
         printf("CPU spatial cycles: %llu\n", read_cycles() - spatial_start);
         spatial_start = read_cycles();
     #endif
 
 	//Hwacha Spatial Encoder
-    vec_computeNgram(channels_ECG, cntr_bits_ECG, buffer, iM_ECG, projM_pos_ECG, projM_neg_ECG, q_hwacha);
+    vec_computeNgram(channels_GSR, cntr_bits_GSR, buffer, iM_GSR, projM_pos_GSR, projM_neg_GSR, q_hwacha);
 
     #if PROFILE == 1
         printf("Hwacha spatial cycles: %llu\n" , read_cycles() - spatial_start);

@@ -19,19 +19,17 @@ void vec_computeNgram(int channels, int cntr_bits, float buffer[], uint64_t iM[]
     uint64_t temp, carry;
 
     // data registers:
-    // vv0: iM
-    // vv1: projM
+    // vv0: iM -> temp
+    // vv1: projM -> carry
     // vv2: chHV
     // vv3: chHV2
-    // vv4: temp
-    // vv5: carry
-    // vv6+: counter bits (from LSB up)
+    // vv4+: counter bits (from LSB up)
     // addr registers:
     // va0: &iM
     // va1: &projM_pos
     // va2: &projM_neg
     // va3: query
-    asm volatile ("vsetcfg %0" : : "r" (VCFG(cntr_bits + 6, 0, 0, 2)));
+    asm volatile ("vsetcfg %0" : : "r" (VCFG(cntr_bits + 4, 0, 0, 2)));
 
     // for counter
     uint64_t one = 0x1ULL;
